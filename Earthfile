@@ -4,7 +4,7 @@ base-image:
     FROM alpine:3.18
 
 builder-image:
-    FROM root+base-image
+    FROM +base-image
     RUN apk update && apk add go git curl make pkgconfig bash docker jq
     ENV GOPATH /go
     ENV PATH $PATH:$GOPATH/bin
@@ -29,7 +29,7 @@ deployer-image:
     RUN kubectl config use-context default
 
 final-image:
-    FROM root+base-image
+    FROM +base-image
     RUN apk update && apk add ca-certificates curl
 
 GO_TESTS:
