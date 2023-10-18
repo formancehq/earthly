@@ -69,15 +69,6 @@ SAVE_IMAGE:
     ENV OTEL_SERVICE_NAME ${COMPONENT}
     SAVE IMAGE --push ${REPOSITORY}/formancehq/${COMPONENT}:${TAG}
 
-GO_LINT:
-    COMMAND
-    COPY (+sources/out --LOCATION=.golangci.yml) .golangci.yml
-    ARG GOPROXY
-    RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
-        --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
-        --mount=type=cache,id=golangci,target=/root/.cache/golangci-lint \
-        golangci-lint run --fix ./...
-
 GO_MOD_TIDY:
     COMMAND
     ARG GOPROXY
