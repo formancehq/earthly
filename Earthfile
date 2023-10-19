@@ -13,7 +13,6 @@ builder-image:
     RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go install github.com/euank/gotmpl/cmd/gotmpl@latest
-    RUN curl -sfL https://goreleaser.com/static/run | VERSION=v1.21.2-pro DISTRIBUTION=pro bash -s -- check
 
 deployer-image:
     FROM +base-image
