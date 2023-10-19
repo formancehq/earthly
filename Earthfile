@@ -40,7 +40,8 @@ final-image:
 GO_TESTS:
     COMMAND
     ARG GOPROXY
-    RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
+    ARG component
+    RUN --mount type=cache,id=go-$component,target=${GOPATH}/pkg/mod \
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go test ./...
 
@@ -49,8 +50,9 @@ GO_COMPILE:
     ARG GOPROXY
     ARG VERSION=latest
     ARG EARTHLY_BUILD_SHA
+    ARG component
     ENV GIT_PATH "$(head -1 go.mod | cut -d\\  -f2)"
-    RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
+    RUN --mount type=cache,id=go-$component,target=${GOPATH}/pkg/mod \
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go build -o main \
         -ldflags="-X ${GIT_PATH}/cmd.Version=${VERSION} \
@@ -62,7 +64,8 @@ GO_INSTALL:
     COMMAND
     ARG package
     ARG GOPROXY
-    RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
+    ARG component
+    RUN --mount type=cache,id=go-$component,target=${GOPATH}/pkg/mod \
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go install ${package}
 
@@ -77,7 +80,8 @@ SAVE_IMAGE:
 GO_MOD_TIDY:
     COMMAND
     ARG GOPROXY
-    RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
+    ARG component
+    RUN --mount type=cache,id=go-$component,target=${GOPATH}/pkg/mod \
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go mod tidy
 
@@ -88,6 +92,7 @@ GO_INSTALL:
 GO_GENERATE:
     COMMAND
     ARG GOPROXY
-    RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
+    ARG component
+    RUN --mount type=cache,id=go-$component,target=${GOPATH}/pkg/mod \
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go generate ./...
