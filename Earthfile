@@ -5,7 +5,7 @@ base-image:
 
 builder-image:
     FROM +base-image
-    RUN apk update && apk add go git curl make pkgconfig bash docker jq
+    RUN apk update && apk add go=1.20.10-r0 git curl make pkgconfig bash docker jq
     ENV GOPATH /go
     ENV PATH $PATH:$GOPATH/bin
     ENV CGO_ENABLED=0
