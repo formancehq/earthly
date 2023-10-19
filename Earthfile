@@ -3,6 +3,10 @@ VERSION 0.7
 base-image:
     FROM alpine:3.18
 
+goreleaser:
+    FROM goreleaser/goreleaser-pro:v1.21.2-pro
+    SAVE ARTIFACT /usr/bin/goreleaser
+
 builder-image:
     FROM +base-image
     RUN apk update && apk add go=1.20.10-r0 git curl make pkgconfig bash docker jq
@@ -13,6 +17,7 @@ builder-image:
     RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go install github.com/euank/gotmpl/cmd/gotmpl@latest
+    COPY (+goreleaser/*) /usr/bin/goreleaser
 
 deployer-image:
     FROM +base-image
