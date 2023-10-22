@@ -11,6 +11,8 @@ builder-image:
     FROM +base-image
     RUN apk update && apk add go=1.20.10-r0 git curl make pkgconfig bash docker jq
     ENV GOPATH /go
+    ARG GOCACHE=/go-cache
+    ARG GOMODCACHE=/go-mod-cache
     ENV PATH $PATH:$GOPATH/bin
     ENV CGO_ENABLED=0
     RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.53.3
@@ -18,8 +20,6 @@ builder-image:
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go install github.com/euank/gotmpl/cmd/gotmpl@latest
     COPY (+goreleaser/*) /usr/bin/goreleaser
-    ARG GOCACHE=/go-cache
-    ARG GOMODCACHE=/go-mod-cache
     CACHE --sharing=shared --id=go_cache $GOCACHE
     CACHE --sharing=shared --id=go_mod_cache $GOMODCACHE
 
