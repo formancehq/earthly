@@ -18,6 +18,11 @@ builder-image:
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go install github.com/euank/gotmpl/cmd/gotmpl@latest
     COPY (+goreleaser/*) /usr/bin/goreleaser
+    ARG GOCACHE=/go-cache
+    ARG GOMODCACHE=/go-mod-cache
+    CACHE --sharing=shared --id=go_cache $GOCACHE
+    CACHE --sharing=shared --id=go_mod_cache $GOMODCACHE
+
 
 deployer-image:
     FROM +base-image
