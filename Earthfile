@@ -45,10 +45,25 @@ final-image:
 GO_TESTS:
     COMMAND
     ARG GOPROXY
+    ARG GOCACHE=/go-cache
+    ARG GOMODCACHE=/go-mod-cache
     ARG component
     RUN --mount type=cache,id=go-$component,target=${GOPATH}/pkg/mod \
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go test ./...
+    CACHE --sharing=shared --id=go_cache $GOCACHE
+    CACHE --sharing=shared --id=go_mod_cache $GOMODCACHE
+
+GO_LINT:
+    COMMAND
+    ARG GOCACHE=/go-cache
+    ARG GOMODCACHE=/go-mod-cache
+    COPY (+sources/out --LOCATION=.golangci.yml) .golangci.yml
+    ARG GOPROXY
+    RUN --mount=type=cache,id=golangci,target=/root/.cache/golangci-lint \
+        golangci-lint run --fix ./...
+    CACHE --sharing=shared --id=go_cache $GOCACHE
+    CACHE --sharing=shared --id=go_mod_cache $GOMODCACHE
 
 GO_COMPILE:
     COMMAND
@@ -85,10 +100,14 @@ SAVE_IMAGE:
 GO_MOD_TIDY:
     COMMAND
     ARG GOPROXY
+    ARG GOCACHE=/go-cache
+    ARG GOMODCACHE=/go-mod-cache
     ARG component
     RUN --mount type=cache,id=go-$component,target=${GOPATH}/pkg/mod \
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go mod tidy
+    CACHE --sharing=shared --id=go_cache $GOCACHE
+    CACHE --sharing=shared --id=go_mod_cache $GOMODCACHE
 
 GO_INSTALL:
     COMMAND
