@@ -16,9 +16,7 @@ builder-image:
     ENV PATH $PATH:$GOPATH/bin
     ENV CGO_ENABLED=0
     RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.53.3
-    RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
-        --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
-        go install github.com/euank/gotmpl/cmd/gotmpl@latest
+    RUN go install github.com/euank/gotmpl/cmd/gotmpl@latest
     COPY (+goreleaser/*) /usr/bin/goreleaser
     CACHE --sharing=shared --id=go_cache $GOCACHE
     CACHE --sharing=shared --id=go_mod_cache $GOMODCACHE
@@ -48,18 +46,17 @@ GO_TESTS:
     ARG GOCACHE=/go-cache
     ARG GOMODCACHE=/go-mod-cache
     ARG component
-    RUN --mount type=cache,id=go-$component,target=${GOPATH}/pkg/mod \
-        --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
+    RUN --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go test ./...
     CACHE --sharing=shared --id=go_cache $GOCACHE
     CACHE --sharing=shared --id=go_mod_cache $GOMODCACHE
 
 GO_LINT:
     COMMAND
-    ARG GOCACHE=/go-cache
-    ARG GOMODCACHE=/go-mod-cache
     COPY (+sources/out --LOCATION=.golangci.yml) .golangci.yml
     ARG GOPROXY
+    ARG GOCACHE=/go-cache
+    ARG GOMODCACHE=/go-mod-cache
     RUN --mount=type=cache,id=golangci,target=/root/.cache/golangci-lint \
         golangci-lint run --fix ./...
     CACHE --sharing=shared --id=go_cache $GOCACHE
