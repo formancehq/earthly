@@ -1,0 +1,10 @@
+---
+kind: Module
+description: Go proxy
+type: helm
+name: goproxy
+namespace: goproxy
+chartPath: ./chart
+include:
+- ./chart
+timeout: 3600

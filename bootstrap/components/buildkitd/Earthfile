@@ -1,0 +1,13 @@
+VERSION --pass-args 0.7
+
+IMPORT ../../.. AS core
+
+deploy:
+    FROM --pass-args core+deployer-image
+    COPY --dir charts/buildkitd ./chart
+    COPY values.yaml .
+    RUN helm upgrade --install \
+        --namespace tools \
+        --values values.yaml \
+        --create-namespace \
+        buildkitd ./chart

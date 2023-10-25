@@ -1,0 +1,12 @@
+VERSION --pass-args 0.7
+
+IMPORT ../../.. AS core
+
+deploy:
+    FROM --pass-args core+deployer-image
+    RUN helm upgrade --install \
+        --namespace kube-system \
+        --create-namespace \
+        --repo https://emberstack.github.io/helm-charts \
+        reflector reflector
+        

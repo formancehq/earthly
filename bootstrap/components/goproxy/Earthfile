@@ -1,0 +1,13 @@
+VERSION --pass-args 0.7
+
+IMPORT ../../.. AS core
+
+deploy:
+    FROM --pass-args core+deployer-image
+    COPY chart chart
+    RUN helm upgrade --install \
+        --namespace tools \
+        --set service.type=NodePort \
+        --set service.nodePort=30222 \
+        --create-namespace \
+        goproxy ./chart
