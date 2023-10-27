@@ -47,7 +47,6 @@ vcluster-deployer-image:
     RUN helm package ./tld-certificates
     ENV tldCertificatesChartBundled=$(cat tld-certificates-0.6.0.tgz | base64 -w 0)
 
-    ARG --required user
     RUN echo "user: $user" > /tmp/values.yaml
     RUN --secret tld echo "tld: $tld" >> /tmp/values.yaml
 
@@ -65,7 +64,6 @@ vcluster-deployer-image:
         --set init.helm[0].release.namespace=formance \
         --values values.yaml \
         --repository-config=''
-    ARG --required user
     RUN while ! kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}'; do sleep 1s; done
     RUN kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}' | base64 -d > /root/.kube/vcluster-config
     ENV KUBECONFIG=/root/.kube/vcluster-config
