@@ -1,5 +1,16 @@
 # Bootstrap
 
+## Configure 
+
+Follow (configure)[../README.md] and add following variables : 
+```
+export FORMANCE_AWS_KEY_ID="XXX"
+export FORMANCE_AWS_SECRET_KEY="XXX"
+
+export EARTHLY_BUILD_ARGS="$EARTHLY_BUILD_ARGS,awsKeyID=$FORMANCE_AWS_KEY_ID,awsSecretKey=$FORMANCE_AWS_SECRET_KEY"
+
+```
+
 ## Install component
 
 ```
