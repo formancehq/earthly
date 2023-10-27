@@ -1,0 +1,11 @@
+VERSION --pass-args --global-cache 0.7
+
+deploy-all-base-components:
+    LOCALLY
+    FOR component IN $(ls components)
+        BUILD --pass-args +deploy-base-component --component=$component
+    END
+
+deploy-base-component:
+    ARG --required component
+    BUILD --pass-args ./components/$component+deploy

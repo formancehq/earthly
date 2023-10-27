@@ -1,0 +1,14 @@
+VERSION --pass-args 0.7
+
+IMPORT ../../.. AS core
+
+deploy:
+    FROM --pass-args core+deployer-image
+    COPY *.yaml .
+    RUN helm upgrade --install \
+        --namespace formance \
+        --create-namespace \
+        --values values.yaml \
+        --version 12.1.2 \
+        --repo https://charts.bitnami.com/bitnami \
+        postgres postgresql

@@ -1,0 +1,17 @@
+VERSION --pass-args 0.7
+
+IMPORT ../../.. AS core
+
+deploy:
+    FROM --pass-args core+deployer-image
+    COPY --dir charts/aws-letsencrypt-issuer ./chart
+    ARG --required awsSecretKey
+    ARG --required awsKeyID
+    ARG --required tld
+    RUN helm upgrade --install \
+        --namespace tools \
+        --create-namespace \
+        --set aws.keyID=$awsKeyID \
+        --set aws.secretKey=$awsSecretKey \
+        --set aws.dnsZone=$tld \
+        aws-letsencrypt-issuer ./chart

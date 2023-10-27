@@ -1,0 +1,14 @@
+architecture: standalone
+primary:
+  service:
+    type: NodePort
+# todo: make configurable
+#    nodePorts:
+#      postgresql: 15432
+global:
+  postgresql:
+    auth:
+      postgresPassword: formance
+      username: formance
+      password: formance
+      database: formance
