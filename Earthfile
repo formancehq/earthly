@@ -63,8 +63,8 @@ vcluster-deployer-image:
         --set init.helm[0].release.namespace=formance \
         --values values.yaml \
         --repository-config=''
-    RUN while ! kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}'; do sleep 1s; done
-    RUN kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}' | base64 -d > /root/.kube/vcluster-config
+    RUN --secret user while ! kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}'; do sleep 1s; done
+    RUN --secret user kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}' | base64 -d > /root/.kube/vcluster-config
     ENV KUBECONFIG=/root/.kube/vcluster-config
     RUN chmod 0700 /root/.kube/vcluster-config
 
