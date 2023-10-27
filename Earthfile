@@ -27,21 +27,17 @@ deployer-image:
         apk add --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community kubectl && \
         apk add --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community kustomize && \
         apk add helm git jq
-    ARG --required KUBE_TOKEN
-    ARG --required KUBE_APISERVER
-    RUN kubectl config set clusters.default.server ${KUBE_APISERVER}
+    RUN --secret KUBE_APISERVER kubectl config set clusters.default.server ${KUBE_APISERVER}
     RUN kubectl config set clusters.default.insecure-skip-tls-verify true
-    RUN kubectl config set-credentials default --token=${KUBE_TOKEN}
+    RUN --secret KUBE_TOKEN kubectl config set-credentials default --token=${KUBE_TOKEN}
     RUN kubectl config set-context default --cluster=default --user=default
     RUN kubectl config use-context default
 
 vcluster-deployer-image:
     FROM +deployer-image
-    ARG --required user
-    ARG --required tld
     COPY --dir ./vcluster/charts/tld-certificates .
     COPY --dir ./vcluster/charts/vcluster-ingress .
-    RUN helm upgrade --install vcluster-$user-ingress ./vcluster-ingress \
+    RUN --secret user --secret tld helm upgrade --install vcluster-$user-ingress ./vcluster-ingress \
         --namespace vcluster-$user \
         --create-namespace \
         --set tld=$tld \
@@ -50,11 +46,11 @@ vcluster-deployer-image:
     RUN helm package ./tld-certificates
     ENV tldCertificatesChartBundled=$(cat tld-certificates-0.6.0.tgz | base64 -w 0)
 
-    RUN echo "user: $user" > /tmp/values.yaml
-    RUN echo "tld: $tld" >> /tmp/values.yaml
+    RUN --secret user echo "user: $user" > /tmp/values.yaml
+    RUN --secret tld echo "tld: $tld" >> /tmp/values.yaml
 
     ARG values=$(cat /tmp/values.yaml)
-    RUN helm upgrade --install $user vcluster \
+    RUN --secret user --secret tld helm upgrade --install $user vcluster \
         --repo https://charts.loft.sh \
         --namespace vcluster-$user \
         --set syncer.extraArgs[0]="--tls-san=kube.$user.$tld" \
