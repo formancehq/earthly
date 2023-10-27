@@ -52,7 +52,6 @@ vcluster-deployer-image:
     RUN --secret tld echo "tld: $tld" >> /tmp/values.yaml
 
     LET values=$(cat /tmp/values.yaml)
-    ARG --required user
     RUN --secret tld helm upgrade --install $user vcluster \
         --repo https://charts.loft.sh \
         --namespace vcluster-$user \
