@@ -37,7 +37,8 @@ vcluster-deployer-image:
     FROM +deployer-image
     COPY --dir ./vcluster/charts/tld-certificates .
     COPY --dir ./vcluster/charts/vcluster-ingress .
-    RUN --secret user --secret tld helm upgrade --install vcluster-$user-ingress ./vcluster-ingress \
+    ARG --required user
+    RUN --secret tld helm upgrade --install vcluster-$user-ingress ./vcluster-ingress \
         --namespace vcluster-$user \
         --create-namespace \
         --set tld=$tld \
@@ -46,11 +47,13 @@ vcluster-deployer-image:
     RUN helm package ./tld-certificates
     ENV tldCertificatesChartBundled=$(cat tld-certificates-0.6.0.tgz | base64 -w 0)
 
-    RUN --secret user echo "user: $user" > /tmp/values.yaml
+    ARG --required user
+    RUN echo "user: $user" > /tmp/values.yaml
     RUN --secret tld echo "tld: $tld" >> /tmp/values.yaml
 
-    ARG values=$(cat /tmp/values.yaml)
-    RUN --secret user --secret tld helm upgrade --install $user vcluster \
+    LET values=$(cat /tmp/values.yaml)
+    ARG --required user
+    RUN --secret tld helm upgrade --install $user vcluster \
         --repo https://charts.loft.sh \
         --namespace vcluster-$user \
         --set syncer.extraArgs[0]="--tls-san=kube.$user.$tld" \
@@ -63,8 +66,9 @@ vcluster-deployer-image:
         --set init.helm[0].release.namespace=formance \
         --values values.yaml \
         --repository-config=''
-    RUN --secret user while ! kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}'; do sleep 1s; done
-    RUN --secret user kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}' | base64 -d > /root/.kube/vcluster-config
+    ARG --required user
+    RUN while ! kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}'; do sleep 1s; done
+    RUN kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}' | base64 -d > /root/.kube/vcluster-config
     ENV KUBECONFIG=/root/.kube/vcluster-config
     RUN chmod 0700 /root/.kube/vcluster-config
 
