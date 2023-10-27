@@ -1,0 +1,25 @@
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-production
+spec:
+  acme:
+    email: geoffrey.ragot@gmail.com
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: letsencrypt-account-key-production
+    solvers:
+    - selector:
+        dnsZones:
+          - "{{ .Values.aws.dnsZone }}"
+      dns01:
+        route53:
+          region: eu-west-1
+          # The AWS access key ID can be specified using the literal accessKeyID parameter
+          # or retrieved from a secret using the accessKeyIDSecretRef
+          # If using accessKeyID, omit the accessKeyIDSecretRef parameter and vice-versa
+          accessKeyID: {{ .Values.aws.keyID }}
+          secretAccessKeySecretRef:
+            name: aws-secret-key
+            key: secret

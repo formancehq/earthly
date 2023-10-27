@@ -1,0 +1,12 @@
+VERSION --pass-args 0.7
+
+IMPORT ../../.. AS core
+
+deploy:
+    FROM --pass-args core+deployer-image
+    COPY --dir chart .
+    ARG --required tld
+    RUN helm upgrade --install jaeger ./chart \
+        --namespace tools \
+        --create-namespace \
+        --set tld=$tld

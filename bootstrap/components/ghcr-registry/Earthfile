@@ -1,0 +1,14 @@
+VERSION --pass-args 0.7
+
+IMPORT ../../.. AS core
+
+deploy:
+    FROM --pass-args core+deployer-image
+    COPY values.yaml .
+    RUN helm upgrade --install \
+        --namespace tools \
+        --create-namespace \
+        --values values.yaml \
+        --set persistence.enabled=true \
+        --repo https://helm.twun.io \
+        ghcr-registry docker-registry

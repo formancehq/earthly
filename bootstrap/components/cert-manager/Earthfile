@@ -1,0 +1,15 @@
+VERSION --pass-args 0.7
+
+IMPORT ../../.. AS core
+
+deploy:
+    FROM --pass-args core+deployer-image
+    COPY values.yaml values.yaml
+    RUN helm upgrade --install \
+        --kube-insecure-skip-tls-verify \
+        --namespace cert-manager \
+        --create-namespace \
+        --values values.yaml \
+        --version v1.11.1 \
+        --repo https://charts.jetstack.io \
+        cert-manager cert-manager

@@ -1,0 +1,19 @@
+config:
+  exporters:
+    otlp/jaeger:
+      endpoint: jaeger.tools.svc.cluster.local:4317
+      tls:
+        insecure: true
+  service:
+    pipelines:
+      traces:
+        exporters:
+        - otlp/jaeger
+
+  processors:
+    memory_limiter:
+      check_interval: 1s
+      limit_mib: 1000
+      spike_limit_mib: 200
+
+mode: deployment
