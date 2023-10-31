@@ -3,3 +3,5 @@ service:
   nodePort: 30112
 persistence:
   existingClaim: ghcr-registry-docker-registry
+nodeSelector:
+  kubernetes.io/hostname: dev-001
