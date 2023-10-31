@@ -4,3 +4,5 @@ service:
 proxy:
   enabled: true
   remoteurl: https://ghcr.io
+nodeSelector:
+  kubernetes.io/hostname: dev-001
