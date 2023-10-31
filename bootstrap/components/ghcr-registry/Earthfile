@@ -4,7 +4,7 @@ IMPORT ../../.. AS core
 
 deploy:
     FROM --pass-args core+deployer-image
-    COPY values.yaml .
+    COPY *.yaml .
     RUN helm upgrade --install \
         --namespace tools \
         --create-namespace \
@@ -12,3 +12,10 @@ deploy:
         --set persistence.enabled=true \
         --repo https://helm.twun.io \
         ghcr-registry docker-registry
+    RUN helm upgrade --install \
+        --namespace tools \
+        --create-namespace \
+        --values values-write.yaml \
+        --set persistence.enabled=true \
+        --repo https://helm.twun.io \
+        ghcr-registry-write docker-registry

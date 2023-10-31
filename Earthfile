@@ -75,15 +75,13 @@ final-image:
     FROM +base-image
     RUN apk update && apk add ca-certificates curl
 
-deploy-all-base-components:
-    LOCALLY
-    FOR component IN $(ls components)
-        BUILD --pass-args +deploy-base-component --component=$component
+run-in-all-vclusters:
+    FROM +deployer-image
+    ARG --required cmd
+    FOR user IN $(helm list --all-namespaces | grep vcluster-0.16.4 | cut -d\  -f1)
+        FROM +vcluster-deployer-image --user=$user
+        RUN --no-cache $cmd
     END
-
-deploy-base-component:
-    ARG --required component
-    BUILD --pass-args ./components/$component+deploy
 
 GO_TESTS:
     COMMAND

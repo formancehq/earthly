@@ -1,3 +1,6 @@
 service:
   type: NodePort
   nodePort: 30111
+proxy:
+  enabled: true
+  remoteurl: https://ghcr.io
