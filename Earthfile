@@ -89,8 +89,6 @@ GO_TESTS:
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
         go test ./...
-    CACHE --sharing=shared --id=go_cache $GOCACHE
-    CACHE --sharing=shared --id=go_mod_cache $GOMODCACHE
 
 GO_LINT:
     COMMAND
@@ -100,8 +98,6 @@ GO_LINT:
     ARG GOMODCACHE=/go-mod-cache
     RUN --mount=type=cache,id=golangci,target=/root/.cache/golangci-lint \
         golangci-lint run --fix ./...
-    CACHE --sharing=shared --id=go_cache $GOCACHE
-    CACHE --sharing=shared --id=go_mod_cache $GOMODCACHE
 
 GO_COMPILE:
     COMMAND
@@ -140,8 +136,6 @@ GO_MOD_TIDY:
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
         go mod tidy
-    CACHE --sharing=shared --id=go_cache $GOCACHE
-    CACHE --sharing=shared --id=go_mod_cache $GOMODCACHE
 
 GO_INSTALL:
     COMMAND
