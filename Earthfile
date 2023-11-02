@@ -1,9 +1,11 @@
 VERSION --pass-args --global-cache --arg-scope-and-set 0.7
 
+FROM alpine:3.18
+
+CACHE --id=gopkgcache --sharing=shared /go/pkg/mod
+CACHE --id=gobuildcache --sharing=shared /root/.cache/go-build
+
 base-image:
-    FROM alpine:3.18
-    #CACHE --id=gopkgcache /go/pkg/mod
-    #CACHE --id=gobuildcache /root/.cache/go-build
 
 goreleaser:
     FROM goreleaser/goreleaser-pro:v1.21.2-pro
