@@ -1,0 +1,15 @@
+VERSION --pass-args 0.7
+
+IMPORT ../../.. AS core
+
+deploy:
+    FROM --pass-args core+deployer-image
+    COPY *.yaml .
+    RUN helm upgrade --install \
+        --namespace formance \
+        --create-namespace \
+        --values values.yaml \
+        --version 7.17.3 \
+        --set imageTag=7.17.13 \
+        --repo https://helm.elastic.co \
+        kibana kibana

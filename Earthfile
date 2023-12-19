@@ -1,4 +1,4 @@
-VERSION --pass-args --global-cache --arg-scope-and-set 0.7
+VERSION --pass-args --global-cache --arg-scope-and-set --use-function-keyword 0.7
 
 base-image:
     FROM alpine:3.18
@@ -84,14 +84,14 @@ run-in-all-vclusters:
     END
 
 GO_TESTS:
-    COMMAND
+    FUNCTION
     ARG GOPROXY
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
         go test ./...
 
 GO_LINT:
-    COMMAND
+    FUNCTION
     COPY (+sources/out --LOCATION=.golangci.yml) .golangci.yml
     ARG GOPROXY
     ARG GOCACHE=/go-cache
@@ -100,7 +100,7 @@ GO_LINT:
         golangci-lint run --fix ./...
 
 GO_COMPILE:
-    COMMAND
+    FUNCTION
     ARG GOPROXY
     ARG VERSION=latest
     ARG EARTHLY_BUILD_SHA
@@ -114,7 +114,7 @@ GO_COMPILE:
     SAVE ARTIFACT main
 
 GO_INSTALL:
-    COMMAND
+    FUNCTION
     ARG package
     ARG GOPROXY
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
@@ -122,7 +122,7 @@ GO_INSTALL:
         go install ${package}
 
 SAVE_IMAGE:
-    COMMAND
+    FUNCTION
     ARG TAG=latest
     ARG --required COMPONENT
     ARG REPOSITORY=ghcr.io
@@ -131,18 +131,18 @@ SAVE_IMAGE:
     SAVE IMAGE --push --insecure ${REPOSITORY}/formancehq/${COMPONENT}:${TAG}
 
 GO_MOD_TIDY:
-    COMMAND
+    FUNCTION
     ARG GOPROXY
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
         go mod tidy
 
 GO_INSTALL:
-    COMMAND
+    FUNCTION
     DO --pass-args GO_INSTALL
 
 GO_GENERATE:
-    COMMAND
+    FUNCTION
     ARG GOPROXY
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
