@@ -1,9 +1,7 @@
 VERSION --pass-args --global-cache --arg-scope-and-set --use-function-keyword 0.7
 
 base-image:
-    FROM alpine:3.18
-    #CACHE --id=gopkgcache /go/pkg/mod
-    #CACHE --id=gobuildcache /root/.cache/go-build
+    FROM alpine:3.19
 
 goreleaser:
     FROM goreleaser/goreleaser-pro:v1.21.2-pro
@@ -20,6 +18,7 @@ builder-image:
     RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.53.3
     COPY (+goreleaser/*) /usr/bin/goreleaser
     RUN curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin v0.94.0
+    RUN fail -i
 
 deployer-image:
     FROM +base-image
