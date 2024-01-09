@@ -88,7 +88,7 @@ GO_TESTS:
     ARG GOPROXY
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
-        go test ./...
+        go test ./... -coverprofile=coverage.out -covermode=atomic
 
 GO_LINT:
     COMMAND
