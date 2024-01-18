@@ -18,6 +18,11 @@ builder-image:
     RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.53.3
     COPY (+goreleaser/*) /usr/bin/goreleaser
     RUN curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin v0.94.0
+    # Add CodeCov
+    ARG EARTHLY_BUILD_SHA
+    RUN curl -Os https://uploader.codecov.io/latest/linux/codecov
+    RUN chmod +x codecov
+    RUN mv codecov /usr/local/bin/codecov
 
 deployer-image:
     FROM +base-image
@@ -86,7 +91,12 @@ GO_TESTS:
     ARG GOPROXY
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
-        go test ./...
+        go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+
+GO_COVERAGE:
+    FUNCTION
+    ARG EARTHLY_BUILD_SHA
+    RUN --secret CODECOV_TOKEN codecov -t $CODECOV_TOKEN -f cover.out -F ledger -C $EARTHLY_BUILD_SHA
 
 GO_LINT:
     FUNCTION
