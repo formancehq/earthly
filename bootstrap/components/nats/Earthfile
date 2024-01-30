@@ -5,4 +5,7 @@ IMPORT ../../.. AS core
 deploy:
     FROM --pass-args core+deployer-image
     COPY *.yaml .
-    RUN helm upgrade --install --values values.yaml nats nats --repo https://nats-io.github.io/k8s/helm/charts/
+    RUN helm upgrade --install \
+        --version 1.1.7 \
+        --values values.yaml nats nats \
+        --repo https://nats-io.github.io/k8s/helm/charts/

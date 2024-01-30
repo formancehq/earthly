@@ -3,3 +3,14 @@ config:
     enabled: true
     fileStorage:
       enabled: false
+service:
+  enabled: true
+  ports:
+    nats:
+      enabled: true
+      nodePort: 31198
+  merge:
+    spec:
+      type: NodePort
+
+
