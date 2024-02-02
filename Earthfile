@@ -4,25 +4,29 @@ base-image:
     FROM alpine:3.19
 
 goreleaser:
-    FROM goreleaser/goreleaser-pro:v1.21.2-pro
+    FROM goreleaser/goreleaser-pro:v1.23.0-pro
     SAVE ARTIFACT /usr/bin/goreleaser
+
+golangci-lint:
+    FROM golangci/golangci-lint:v1.55.2
+    SAVE ARTIFACT /usr/bin/golangci-lint
+
+syft:
+    FROM anchore/syft:v0.103.1
+    SAVE ARTIFACT /syft
 
 builder-image:
     FROM +base-image
     RUN apk update && apk add go git curl make pkgconfig bash docker jq
     ENV GOPATH /go
+    ENV GOTOOLCHAIN=local
     ARG GOCACHE=/go-cache
     ARG GOMODCACHE=/go-mod-cache
-    ENV PATH $PATH:$GOPATH/bin
+    ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
     ENV CGO_ENABLED=0
-    RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.53.3
+    COPY (+golangci-lint/*) /usr/bin/golangci-lint
     COPY (+goreleaser/*) /usr/bin/goreleaser
-    RUN curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin v0.94.0
-    # Add CodeCov
-    ARG EARTHLY_BUILD_SHA
-    RUN curl -Os https://uploader.codecov.io/latest/linux/codecov
-    RUN chmod +x codecov
-    RUN mv codecov /usr/local/bin/codecov
+    COPY (+syft/*) /usr/bin/syft
 
 deployer-image:
     FROM +base-image
