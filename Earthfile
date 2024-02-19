@@ -63,6 +63,7 @@ vcluster-deployer-image:
         --namespace vcluster-$user \
         --set syncer.extraArgs[0]="--tls-san=kube.$user.$tld" \
         --set syncer.extraArgs[1]="--out-kube-config-server=https://kube.$user.$tld" \
+        --set syncer.extraArgs[2]="--out-kube-config-secret=vc-$user" \
         --set init.helm[0].bundle=$tldCertificatesChartBundled \
         --set init.helm[0].chart.name=tld-certificates \
         --set init.helm[0].chart.version=0.6.0 \
@@ -71,7 +72,8 @@ vcluster-deployer-image:
         --set init.helm[0].release.namespace=formance \
         --values values.yaml \
         --repository-config=''
-    RUN while ! kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}'; do sleep 1s; done
+    RUN kubectl -n vcluster-$user get secrets/vc-$user || kubectl -n vcluster-$user create secret generic vc-$user
+    RUN while [ "$(kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}')" == "" ]; do sleep 1s; done
     RUN kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}' | base64 -d > /root/.kube/vcluster-config
     ENV KUBECONFIG=/root/.kube/vcluster-config
     RUN chmod 0700 /root/.kube/vcluster-config
