@@ -93,7 +93,7 @@ run-in-all-vclusters:
     END
 
 helm-base:
-    FROM alpine:3.19
+    FROM +baseimage
     RUN apk update && apk openssl
     DO --pass-args +HELM_INSTALL 
 
@@ -175,6 +175,4 @@ HELM_VALIDATE:
 
 HELM_INSTALL:
     FUNCTION
-    RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 && \
-        chmod 700 ./get_helm.sh && \
-        sh ./get_helm.sh
+    RUN apk add helm
