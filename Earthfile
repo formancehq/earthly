@@ -92,6 +92,10 @@ run-in-all-vclusters:
         RUN --no-cache $cmd
     END
 
+helm-base:
+    FROM +base-image
+    RUN apk update && apk add openssl helm
+
 GO_TESTS:
     FUNCTION
     ARG GOPROXY
@@ -161,3 +165,9 @@ GO_GENERATE:
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
         go generate ./...
+
+HELM_VALIDATE:
+    FUNCTION
+    ARG additionalArgs
+    RUN helm lint ./ $additionalArgs
+    RUN helm template ./ $additionalArgs
