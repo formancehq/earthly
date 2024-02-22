@@ -93,9 +93,8 @@ run-in-all-vclusters:
     END
 
 helm-base:
-    FROM +baseimage
-    RUN apk update && apk openssl
-    DO --pass-args +HELM_INSTALL 
+    FROM +base-image
+    RUN apk update && apk add openssl helm
 
 GO_TESTS:
     FUNCTION
@@ -172,7 +171,3 @@ HELM_VALIDATE:
     ARG additionalArgs
     RUN helm lint ./ $additionalArgs
     RUN helm template ./ $additionalArgs
-
-HELM_INSTALL:
-    FUNCTION
-    RUN apk add helm
