@@ -161,3 +161,15 @@ GO_GENERATE:
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
         go generate ./...
+
+HELM_VALIDATE:
+    FUNCTION
+    ARG additionalArgs
+    RUN helm lint ./ $additionalArgs
+    RUN helm template ./ $additionalArgs
+
+HELM_INSTALL:
+    FUNCTION
+    RUN curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 && \
+        chmod 700 ./get_helm.sh && \
+        sh ./get_helm.sh
