@@ -92,6 +92,11 @@ run-in-all-vclusters:
         RUN --no-cache $cmd
     END
 
+helm-base:
+    FROM alpine:3.19
+    RUN apk update && apk openssl
+    DO --pass-args +HELM_INSTALL 
+
 GO_TESTS:
     FUNCTION
     ARG GOPROXY
