@@ -169,5 +169,5 @@ GO_GENERATE:
 HELM_VALIDATE:
     FUNCTION
     ARG additionalArgs
-    RUN helm lint ./ $additionalArgs
+    RUN helm lint ./ --strict $additionalArgs
     RUN helm template ./ $additionalArgs
