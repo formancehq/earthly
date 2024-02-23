@@ -52,7 +52,7 @@ vcluster-deployer-image:
         --set user=$user
     COPY ./vcluster/values.yaml .
     RUN helm package ./tld-certificates
-    ENV tldCertificatesChartBundled=$(cat tld-certificates-0.6.0.tgz | base64 -w 0)
+    ENV tldCertificatesChartBundled=$(cat tld-certificates-0.6.1.tgz | base64 -w 0)
 
     RUN echo "user: $user" > /tmp/values.yaml
     RUN --secret tld echo "tld: $tld" >> /tmp/values.yaml
@@ -66,7 +66,7 @@ vcluster-deployer-image:
         --set syncer.extraArgs[2]="--out-kube-config-secret=vc-$user" \
         --set init.helm[0].bundle=$tldCertificatesChartBundled \
         --set init.helm[0].chart.name=tld-certificates \
-        --set init.helm[0].chart.version=0.6.0 \
+        --set init.helm[0].chart.version=0.6.1 \
         --set init.helm[0].values="$values" \
         --set init.helm[0].release.name=tld-certificates \
         --set init.helm[0].release.namespace=formance \
