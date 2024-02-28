@@ -28,7 +28,6 @@ builder-image:
     COPY (+golangci-lint/*) /usr/bin/golangci-lint
     COPY (+goreleaser/*) /usr/bin/goreleaser
     COPY (+syft/*) /usr/bin/syft
-    RUN fail -i
 
 deployer-image:
     FROM +base-image
