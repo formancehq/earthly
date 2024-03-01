@@ -20,6 +20,7 @@ spec:
           command:
             - /go/bin/all-in-one-linux
             - --query.base-path=/jaeger
+            - --memory.max-traces=1000000
           ports:
             - containerPort: 16686
             - containerPort: 14250
