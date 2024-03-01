@@ -25,3 +25,7 @@ spec:
             - containerPort: 14250
             - containerPort: 14268
             - containerPort: 4317
+          resources:
+            limits:
+              cpu: 4
+              memory: 20Gi
