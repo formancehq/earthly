@@ -96,6 +96,19 @@ helm-base:
     FROM +base-image
     RUN apk update && apk add openssl helm
 
+
+grpc-generate:
+    FROM +builder-image
+    RUN apk add --no-cache protobuf git protobuf-dev && \
+        go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
+        go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
+    WORKDIR /src
+    RUN mkdir generated
+    ARG --required protoName
+    COPY $protoName .
+    RUN protoc --go_out=generated --go_opt=paths=source_relative --go-grpc_out=generated --go-grpc_opt=paths=source_relative $protoName
+    SAVE ARTIFACT generated AS LOCAL internal/generated
+
 GO_TESTS:
     FUNCTION
     ARG GOPROXY
