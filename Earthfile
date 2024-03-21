@@ -111,10 +111,10 @@ deploy-staging:
     FROM --pass-args +base-argocd
     
     ARG --required AUTH_TOKEN
-    ARG --required PROJECT
-    ARG ARGOCD_SERVER=argocd.internal.formance.cloud
+    ARG --required APPLICATION
+    LET SERVER=argocd.internal.formance.cloud
     
-    RUN argocd app sync $PROJECT --auth-token $AUTH_TOKEN --server $ARGOCD_SERVER --grpc-web
+    RUN argocd app sync $APPLICATION --auth-token $AUTH_TOKEN --server $SERVER --grpc-web
 
 
 GRPC_GEN:
