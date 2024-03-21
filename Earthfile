@@ -102,6 +102,21 @@ grpc-base:
         go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
         go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
+base-argocd:
+    FROM --pass-args core+base-image
+    RUN apk add curl
+    RUN curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 && chmod 555 /usr/local/bin/argocd
+
+deploy-stagging:
+    FROM base-argocd
+    
+    ARG --required AUTH_TOKEN
+    ARG --required PROJECT
+    ARG --required USER_ROLE
+    ARG ARGOCD_SERVER=argocd.internal.formance.cloud
+    
+    RUN argocd app sync $PROJECT --auth-token $AUTH_TOKEN --server $ARGOCD_SERVER
+
 
 GRPC_GEN:
     FUNCTION
