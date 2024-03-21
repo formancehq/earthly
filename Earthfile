@@ -107,7 +107,7 @@ base-argocd:
     RUN apk add curl
     RUN curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 && chmod 555 /usr/local/bin/argocd
 
-deploy-stagging:
+deploy-staging:
     FROM base-argocd
     
     ARG --required AUTH_TOKEN
