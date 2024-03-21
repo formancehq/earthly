@@ -108,7 +108,7 @@ base-argocd:
     RUN curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 && chmod 555 /usr/local/bin/argocd
 
 deploy-staging:
-    FROM base-argocd
+    FROM --pass-args +base-argocd
     
     ARG --required AUTH_TOKEN
     ARG --required PROJECT
