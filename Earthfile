@@ -113,7 +113,7 @@ deploy-staging:
     ARG --required APPLICATION
     LET SERVER=argocd.internal.formance.cloud
     
-    RUN --secret $AUTH_TOKEN \
+    RUN --secret AUTH_TOKEN \
         argocd app sync $APPLICATION --auth-token $AUTH_TOKEN --server $SERVER --grpc-web
 
 
