@@ -107,6 +107,22 @@ base-argocd:
     RUN apk add curl
     RUN curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 && chmod 555 /usr/local/bin/argocd
 
+
+deployer-module:
+    FROM --pass-args +base-argocd 
+
+    ARG --required ARGS
+    LET APPLICATION=staging-eu-west-1-hosting-regions
+    LET SERVER=argocd.internal.formance.cloud
+    
+    RUN --secret AUTH_TOKEN \
+        argocd app set $APPLICATION \ 
+        $ARGS \
+        --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web
+
+    BUILD +deploy-staging --APPLICATION=staging-eu-west-1-hosting-regions
+
+# Should rename as `sync-staging`
 deploy-staging:
     FROM --pass-args +base-argocd
     
