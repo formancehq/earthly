@@ -111,6 +111,7 @@ base-argocd:
 deployer-module:
     FROM --pass-args +base-argocd 
 
+    ARG WITH_SYNC=true
     ARG --required ARGS
     LET APPLICATION=staging-eu-west-1-hosting-regions
     LET SERVER=argocd.internal.formance.cloud
@@ -120,7 +121,10 @@ deployer-module:
         $ARGS \
         --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web
 
-    BUILD +deploy-staging --APPLICATION=staging-eu-west-1-hosting-regions
+    IF [ "$WITH_SYNC" ]
+        BUILD +deploy-staging --APPLICATION=staging-eu-west-1-hosting-regions
+    END
+
 
 # Should rename as `sync-staging`
 deploy-staging:
