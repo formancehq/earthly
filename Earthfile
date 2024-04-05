@@ -121,7 +121,7 @@ deployer-module:
         $ARGS \
         --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web
 
-    IF [ "$WITH_SYNC" ]
+    IF [ "$WITH_SYNC" = "true" ]
         BUILD +deploy-staging --APPLICATION=staging-eu-west-1-hosting-regions
     END
 
