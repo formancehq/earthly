@@ -107,7 +107,8 @@ base-argocd:
     RUN apk add curl
     RUN curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 && chmod 555 /usr/local/bin/argocd
 
-
+# Should rename as `application-set`
+# Deprecated stack #1479
 deployer-module:
     FROM --pass-args +base-argocd 
 
@@ -126,7 +127,8 @@ deployer-module:
     END
 
 
-# Should rename as `sync-staging`
+# Should rename as `application-sync`
+# Deprecated stack #1479
 deploy-staging:
     FROM --pass-args +base-argocd
     
