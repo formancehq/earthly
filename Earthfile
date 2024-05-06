@@ -137,6 +137,33 @@ deploy-staging:
         argocd app sync $APPLICATION --auth-token $AUTH_TOKEN --server $SERVER --grpc-web
 
 
+application-set:
+    FROM --pass-args +base-argocd 
+
+    ARG --required ARGS
+    ARG WITH_SYNC=false
+    LET APPLICATION=staging-eu-west-1-hosting-regions
+    LET SERVER=argocd.internal.formance.cloud
+    
+    RUN --secret AUTH_TOKEN \
+        argocd app set $APPLICATION \ 
+        $ARGS \
+        --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web
+
+    IF [ "$WITH_SYNC" = "true" ]
+        BUILD +application-sync --APPLICATION=staging-eu-west-1-hosting-regions
+    END
+
+application-sync:
+    FROM --pass-args +base-argocd
+    
+    ARG --required APPLICATION
+    LET SERVER=argocd.internal.formance.cloud
+    
+    RUN --secret AUTH_TOKEN \
+        argocd app sync $APPLICATION --auth-token $AUTH_TOKEN --server $SERVER --grpc-web
+
+
 GRPC_GEN:
     FUNCTION
     RUN mkdir generated
