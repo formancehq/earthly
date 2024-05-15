@@ -1,4 +1,4 @@
-VERSION --pass-args --global-cache --arg-scope-and-set --use-function-keyword 0.7
+VERSION 0.8
 
 base-image:
     FROM alpine:3.19

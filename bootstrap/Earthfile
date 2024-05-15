@@ -1,4 +1,4 @@
-VERSION --pass-args --global-cache 0.7
+VERSION 0.8
 
 deploy-all-base-components:
     LOCALLY
