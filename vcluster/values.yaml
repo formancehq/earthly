@@ -24,7 +24,7 @@ sync:
         - apiGroups: ["traefik.containo.us"]
           resources: ["ingressroutes", "serverstransports"]
           verbs: ["create", "delete", "patch", "update", "get", "list", "watch"]
-        - apiGroups: ["traefik.io/v1alpha1"]
+        - apiGroups: ["traefik.io"]
           resources: ["ingressroutes", "serverstransports"]
           verbs: ["create", "delete", "patch", "update", "get", "list", "watch"]
     clusterRole:
