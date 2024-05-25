@@ -64,6 +64,7 @@ vcluster-deployer-image:
         --set syncer.extraArgs[0]="--tls-san=kube.$user.$tld" \
         --set syncer.extraArgs[1]="--out-kube-config-server=https://kube.$user.$tld" \
         --set syncer.extraArgs[2]="--out-kube-config-secret=vc-$user" \
+        # We could install the chart on the host and copy the resulting secret to the dedicated vcluster formance namespace
         --set init.helm[0].bundle=$tldCertificatesChartBundled \
         --set init.helm[0].chart.name=tld-certificates \
         --set init.helm[0].chart.version=0.6.1 \

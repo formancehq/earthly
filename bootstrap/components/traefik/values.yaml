@@ -1,3 +1,11 @@
 additionalArguments:
-- --log.level=DEBUG
-- --providers.kubernetesingress
+  - --log.level=DEBUG
+  - --providers.kubernetesingress
+
+tracing:
+  otlp:
+    enabled: true
+    grpc:
+      enabled: true
+      endpoint: otel-collector-opentelemetry-collector.formance.svc:4317
+      insecure: true
