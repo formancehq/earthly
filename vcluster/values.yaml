@@ -25,13 +25,7 @@ sync:
           resources: ["ingressroutes", "serverstransports"]
           verbs: ["create", "delete", "patch", "update", "get", "list", "watch"]
         - apiGroups: ["traefik.io/v1alpha1"]
-          resources:
-            [
-              "ingressroutes",
-              "serverstransports",
-              "ingressroutetcps",
-              "ingressrouteudps",
-            ]
+          resources: ["ingressroutes", "serverstransports"]
           verbs: ["create", "delete", "patch", "update", "get", "list", "watch"]
     clusterRole:
       extraRules:
