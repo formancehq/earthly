@@ -2,10 +2,12 @@ VERSION 0.8
 
 IMPORT ../../.. AS core
 
+# Version 27.0.1 & 27.0.2 are broken with grpc, it might need additional configuration
+# Version 28.0.0 is a major release, it also break grpc connection, crds changes, etc
 deploy:
     FROM --pass-args core+deployer-image
     ARG tld=dev.formance.theweirdlab.me
-    ARG version=27.0.2
+    ARG version=27.0.0
     COPY values.yaml .
     RUN helm upgrade --install \
         --namespace kube-system \
