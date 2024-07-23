@@ -1,6 +1,7 @@
 VERSION 0.8
 
 IMPORT github.com/formancehq/stack/libs/go-libs:feat/monorepo AS libs
+IMPORT github.com/formancehq/stack/libs/core:feat/monorepo AS core
 IMPORT github.com/formancehq/stack/releases:feat/monorepo AS releases
 
 sources:
@@ -316,6 +317,11 @@ INCLUDE_GO_LIBS:
     FUNCTION
     ARG --required LOCATION
     COPY (libs+sources/src --LOCATION=libs/go-libs) ${LOCATION}
+
+INCLUDE_CORE_LIBS:
+    FUNCTION
+    ARG --required LOCATION
+    COPY (core+sources/src --LOCATION=libs/core) ${LOCATION}
 
 GO_LINT:
     FUNCTION
