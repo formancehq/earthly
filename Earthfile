@@ -1,5 +1,7 @@
 VERSION 0.8
 
+IMPORT github.com/formancehq/stack/libs/go-libs:feat/monorepo AS libs
+
 base-image:
     FROM alpine:3.20
 
@@ -302,7 +304,7 @@ HELM_PUBLISH:
 INCLUDE_GO_LIBS:
     FUNCTION
     ARG --required LOCATION
-    COPY (+sources/out --LOCATION=libs/go-libs) ${LOCATION}
+    COPY (libs+sources/out --LOCATION=libs/go-libs) ${LOCATION}
 
 GO_LINT:
     FUNCTION
