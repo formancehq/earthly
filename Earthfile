@@ -4,7 +4,7 @@ IMPORT github.com/formancehq/stack/libs/go-libs:feat/monorepo AS libs
 IMPORT github.com/formancehq/stack/releases:feat/monorepo AS releases
 
 sources:
-    FROM core+base-image
+    FROM +base-image
     ARG --required LOCATION
     COPY ${LOCATION} out
     SAVE ARTIFACT out
@@ -234,6 +234,7 @@ GO_COVERAGE:
 GO_LINT:
     FUNCTION
     COPY (+sources/out --LOCATION=.golangci.yml) .golangci.yml
+    RUN golangci-lint run --fix ./...
     ARG GOPROXY
     ARG GOCACHE=/go-cache
     ARG GOMODCACHE=/go-mod-cache
