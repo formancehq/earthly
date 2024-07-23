@@ -304,7 +304,7 @@ HELM_PUBLISH:
 INCLUDE_GO_LIBS:
     FUNCTION
     ARG --required LOCATION
-    COPY (libs+sources/out --LOCATION=libs/go-libs) ${LOCATION}
+    COPY (libs+sources/src --LOCATION=libs/go-libs) ${LOCATION}
 
 GO_LINT:
     FUNCTION
