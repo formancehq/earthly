@@ -166,6 +166,32 @@ application-sync:
     RUN --secret AUTH_TOKEN \
         argocd app sync $APPLICATION --auth-token $AUTH_TOKEN --server $SERVER --grpc-web
 
+goreleaser:
+    FROM core+builder-image
+    ARG --required path
+    COPY . /src
+    WORKDIR /src/$path
+    ARG mode=local
+    LET buildArgs = --clean
+    IF [ "$mode" = "local" ]
+        SET buildArgs = --nightly --skip=publish --clean
+    ELSE IF [ "$mode" = "ci" ]
+        SET buildArgs = --nightly --clean
+    END
+    IF [ "$mode" != "local" ]
+        WITH DOCKER
+            RUN --secret GITHUB_TOKEN echo $GITHUB_TOKEN | docker login ghcr.io -u NumaryBot --password-stdin
+        END
+    END
+    WITH DOCKER
+        RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
+            --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
+            --secret GORELEASER_KEY \
+            --secret GITHUB_TOKEN \
+            --secret SPEAKEASY_API_KEY \
+            --secret FURY_TOKEN \
+            goreleaser release -f .goreleaser.yml $buildArgs
+    END
 
 GRPC_GEN:
     FUNCTION
