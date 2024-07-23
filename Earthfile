@@ -3,7 +3,7 @@ VERSION 0.8
 base-image:
     FROM alpine:3.20
 
-goreleaser:
+sources-goreleaser:
     FROM goreleaser/goreleaser-pro:v1.23.0-pro
     SAVE ARTIFACT /usr/bin/goreleaser
 
@@ -11,7 +11,7 @@ golangci-lint:
     FROM golangci/golangci-lint:v1.60.3
     SAVE ARTIFACT /usr/bin/golangci-lint
 
-syft:
+sources-syft:
     FROM anchore/syft:v0.103.1
     SAVE ARTIFACT /syft
 
@@ -24,9 +24,9 @@ builder-image:
     ARG GOMODCACHE=/go-mod-cache
     ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
     ENV CGO_ENABLED=0
-    COPY (+golangci-lint/*) /usr/bin/golangci-lint
-    COPY (+goreleaser/*) /usr/bin/goreleaser
-    COPY (+syft/*) /usr/bin/syft
+    COPY (+sources-golangci-lint/*) /usr/bin/golangci-lint
+    COPY (+sources-goreleaser/*) /usr/bin/goreleaser
+    COPY (+souces-syft/*) /usr/bin/syft
 
 deployer-image:
     FROM +base-image
