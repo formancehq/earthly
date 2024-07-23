@@ -18,7 +18,7 @@ sources-syft:
     SAVE ARTIFACT /syft
 
 sources-speakeasy:
-    FROM core+base-image
+    FROM +base-image
     RUN apk update && apk add yarn jq unzip curl
     ARG VERSION=v1.292.0
     ARG TARGETARCH
@@ -179,7 +179,7 @@ application-sync:
         argocd app sync $APPLICATION --auth-token $AUTH_TOKEN --server $SERVER --grpc-web
 
 goreleaser:
-    FROM core+builder-image
+    FROM +builder-image
     ARG --required path
     COPY . /src
     WORKDIR /src/$path
