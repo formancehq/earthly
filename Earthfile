@@ -3,6 +3,12 @@ VERSION 0.8
 IMPORT github.com/formancehq/stack/libs/go-libs:feat/monorepo AS libs
 IMPORT github.com/formancehq/stack/releases:feat/monorepo AS releases
 
+sources:
+    FROM core+base-image
+    ARG --required LOCATION
+    COPY ${LOCATION} out
+    SAVE ARTIFACT out
+
 base-image:
     FROM alpine:3.20
 
