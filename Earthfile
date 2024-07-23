@@ -179,11 +179,9 @@ application-sync:
     RUN --secret AUTH_TOKEN \
         argocd app sync $APPLICATION --auth-token $AUTH_TOKEN --server $SERVER --grpc-web
 
-goreleaser:
-    FROM +builder-image
-    ARG --required path
-    COPY . /src
-    WORKDIR /src/$path
+GORELEASER:
+    FUNCTION
+    WORKDIR /src
     ARG mode=local
     LET buildArgs = --clean
     IF [ "$mode" = "local" ]
