@@ -252,3 +252,35 @@ HELM_VALIDATE:
     ARG additionalArgs
     RUN helm lint ./ --strict $additionalArgs
     RUN helm template ./ $additionalArgs
+
+HELM_PUBLISH:
+    FUNCTION
+    ARG --required path
+    WITH DOCKER
+        RUN --secret GITHUB_TOKEN echo $GITHUB_TOKEN | docker login ghcr.io -u NumaryBot --password-stdin
+    END
+    WITH DOCKER
+        RUN helm push ${path} oci://ghcr.io/formancehq/helm
+    END
+
+INCLUDE_GO_LIBS:
+    FUNCTION
+    ARG --required LOCATION
+    COPY (+sources/out --LOCATION=libs/go-libs) ${LOCATION}
+
+GO_LINT:
+    FUNCTION
+    COPY (+sources/out --LOCATION=.golangci.yml) .golangci.yml
+    ARG GOPROXY
+    RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
+        --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
+        --mount=type=cache,id=golangci,target=/root/.cache/golangci-lint \
+        golangci-lint run --fix ./...
+
+GO_TIDY:
+    FUNCTION
+    ARG GOPROXY
+    RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
+        --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
+        go mod tidy
+    SAVE ARTIFACT go.* AS LOCAL .
