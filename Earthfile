@@ -1,6 +1,7 @@
 VERSION 0.8
 
 IMPORT github.com/formancehq/stack/libs/go-libs:feat/monorepo AS libs
+IMPORT github.com/formancehq/stack/releases:feat/monorepo AS releases
 
 base-image:
     FROM alpine:3.20
