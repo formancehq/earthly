@@ -301,6 +301,11 @@ HELM_PUBLISH:
         RUN helm push ${path} oci://ghcr.io/formancehq/helm
     END
 
+INCLURE_SDK_GO:
+    FUNCTION
+    ARG --required LOCATION
+    COPY (releases+sdk-generate/go) ${LOCATION}
+
 INCLUDE_GO_LIBS:
     FUNCTION
     ARG --required LOCATION
