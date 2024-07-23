@@ -15,6 +15,16 @@ sources-syft:
     FROM anchore/syft:v0.103.1
     SAVE ARTIFACT /syft
 
+sources-speakeasy:
+    FROM core+base-image
+    RUN apk update && apk add yarn jq unzip curl
+    ARG VERSION=v1.292.0
+    ARG TARGETARCH
+    RUN curl -fsSL https://github.com/speakeasy-api/speakeasy/releases/download/${VERSION}/speakeasy_linux_$TARGETARCH.zip -o /tmp/speakeasy_linux_$TARGETARCH.zip
+    RUN unzip /tmp/speakeasy_linux_$TARGETARCH.zip speakeasy
+    RUN chmod +x speakeasy
+    SAVE ARTIFACT speakeasy
+
 builder-image:
     FROM +base-image
     RUN apk update && apk add go git curl make pkgconfig bash docker jq
