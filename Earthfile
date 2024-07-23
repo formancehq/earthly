@@ -26,7 +26,7 @@ builder-image:
     ENV CGO_ENABLED=0
     COPY (+sources-golangci-lint/*) /usr/bin/golangci-lint
     COPY (+sources-goreleaser/*) /usr/bin/goreleaser
-    COPY (+souces-syft/*) /usr/bin/syft
+    COPY (+sources-syft/*) /usr/bin/syft
 
 deployer-image:
     FROM +base-image
