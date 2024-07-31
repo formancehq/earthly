@@ -1,3 +1,5 @@
+version: 2
+
 nightly:
   name_template: '{{ .FullCommit }}'
   publish_release: false
