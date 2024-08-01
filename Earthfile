@@ -340,3 +340,11 @@ GO_TIDY:
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go mod tidy
     SAVE ARTIFACT go.* AS LOCAL .
+
+SDK_GO:
+    FUNCTION
+    COPY (core+sources-speakeasy/speakeasy) /bin/speakeasy
+    COPY ./sdk/go.gen.yaml /src/sdks/gen.yaml
+    WORKDIR /src/sdks
+    RUN --secret SPEAKEASY_API_KEY speakeasy generate sdk -s ./../openapi.yaml -o ./ -l go
+    SAVE ARTIFACT /src/releases/sdks/go AS LOCAL ./sdks/go
