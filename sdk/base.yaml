@@ -1,6 +1,5 @@
 openapi: 3.0.3
 info:
-  title: Formance Stack API
   description: |
     Open, modular foundation for unique payments flows
 
@@ -20,7 +19,6 @@ info:
   x-logo:
     url: https://avatars.githubusercontent.com/u/84325077?s=200&v=4
     altText: Formance
-  version: "SDK_VERSION"
 
 servers:
 - url: http://localhost
