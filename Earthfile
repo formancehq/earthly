@@ -348,3 +348,17 @@ SDK_GO:
     WORKDIR /src/sdks
     RUN --secret SPEAKEASY_API_KEY speakeasy generate sdk -s ./../openapi.yaml -o ./ -l go
     SAVE ARTIFACT /src/releases/sdks/go AS LOCAL ./sdks/go
+
+
+OPENAPI:
+    FUNCTION
+    openapi:
+    FROM node:20-alpine
+    RUN apk update && apk add yq
+    RUN npm install -g openapi-merge-cli
+    WORKDIR /src
+    COPY --dir openapi openapi
+    COPY (+sources/out/base.yaml --LOCATION=sdk/) ./openapi/base.yaml
+    RUN openapi-merge-cli --config ./openapi/openapi-merge.json
+    RUN yq -oy ./openapi.json > openapi.yaml
+    SAVE ARTIFACT ./openapi.yaml AS LOCAL ./openapi.yaml
