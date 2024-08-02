@@ -352,7 +352,6 @@ SDK_GO:
 
 OPENAPI:
     FUNCTION
-    openapi:
     FROM node:20-alpine
     RUN apk update && apk add yq
     RUN npm install -g openapi-merge-cli
