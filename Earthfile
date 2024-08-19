@@ -60,6 +60,7 @@ vcluster-deployer-image:
     LET values=$(cat /tmp/values.yaml)
     RUN --secret tld helm upgrade --install $user vcluster \
         --repo https://charts.loft.sh \
+        --version v0.19.7 \
         --namespace vcluster-$user \
         --set syncer.extraArgs[0]="--tls-san=kube.$user.$tld" \
         --set syncer.extraArgs[1]="--out-kube-config-server=https://kube.$user.$tld" \
