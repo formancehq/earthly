@@ -1,7 +1,7 @@
 VERSION 0.8
 
 base-image:
-    FROM alpine:3.19
+    FROM alpine:3.20
 
 goreleaser:
     FROM goreleaser/goreleaser-pro:v1.23.0-pro
