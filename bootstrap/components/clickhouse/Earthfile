@@ -1,0 +1,9 @@
+VERSION 0.8
+
+IMPORT ../../.. AS core
+
+deploy:
+    FROM --pass-args core+deployer-image
+    RUN helm upgrade --install \
+        --version 6.2.17 \
+        clickhouse oci://registry-1.docker.io/bitnamicharts/clickhouse
