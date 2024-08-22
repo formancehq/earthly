@@ -12,6 +12,10 @@ mapServices:
       to: formance/elasticsearch-master
     - from: tools/jaeger
       to: tools/jaeger
+    - from: default/clickhouse
+      to: default/clickhouse
+    - from: default/clickhouse-headless
+      to: default/clickhouse-headless
 sync:
   ingresses:
     enabled: true
