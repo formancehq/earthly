@@ -178,9 +178,10 @@ GRPC_GEN:
 GO_TESTS:
     FUNCTION
     ARG GOPROXY
+    ARG ADDITIONAL_ARGUMENTS
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
-        go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+        go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./... ${ADDITIONAL_ARGUMENTS}
 
 GO_COVERAGE:
     FUNCTION
@@ -193,8 +194,9 @@ GO_LINT:
     ARG GOPROXY
     ARG GOCACHE=/go-cache
     ARG GOMODCACHE=/go-mod-cache
+    ARG ADDITIONAL_ARGUMENTS
     RUN --mount=type=cache,id=golangci,target=/root/.cache/golangci-lint \
-        golangci-lint run --fix ./...
+        golangci-lint run --fix ${ADDITIONAL_ARGUMENTS} ./...
 
 GO_COMPILE:
     FUNCTION
@@ -202,21 +204,23 @@ GO_COMPILE:
     ARG VERSION=latest
     ARG EARTHLY_BUILD_SHA
     LET GIT_PATH=$(head -1 go.mod | cut -d\\  -f2)
+    ARG ADDITIONAL_ARGUMENTS
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
         go build -o main \
         -ldflags="-X ${GIT_PATH}/cmd.Version=${VERSION} \
         -X ${GIT_PATH}/cmd.BuildDate=$(date +%s) \
-        -X ${GIT_PATH}/cmd.Commit=${EARTHLY_BUILD_SHA}" ./
+        -X ${GIT_PATH}/cmd.Commit=${EARTHLY_BUILD_SHA}" ${ADDITIONAL_ARGUMENTS} ./
     SAVE ARTIFACT main
 
 GO_INSTALL:
     FUNCTION
     ARG package
     ARG GOPROXY
+    ARG ADDITIONAL_ARGUMENTS
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuild,target=/root/.cache/go-build \
-        go install ${package}
+        go install ${ADDITIONAL_ARGUMENTS} ${package}
 
 SAVE_IMAGE:
     FUNCTION
@@ -230,20 +234,18 @@ SAVE_IMAGE:
 GO_MOD_TIDY:
     FUNCTION
     ARG GOPROXY
+    ARG ADDITIONAL_ARGUMENTS
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
-        go mod tidy
-
-GO_INSTALL:
-    FUNCTION
-    DO --pass-args GO_INSTALL
+        go mod tidy ${ADDITIONAL_ARGUMENTS}
 
 GO_GENERATE:
     FUNCTION
     ARG GOPROXY
+    ARG ADDITIONAL_ARGUMENTS
     RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
-        go generate ./...
+        go generate ${ADDITIONAL_ARGUMENTS} ./...
 
 HELM_VALIDATE:
     FUNCTION
