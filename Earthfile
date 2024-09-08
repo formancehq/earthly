@@ -8,7 +8,7 @@ goreleaser:
     SAVE ARTIFACT /usr/bin/goreleaser
 
 golangci-lint:
-    FROM golangci/golangci-lint:v1.55.2
+    FROM golangci/golangci-lint:v1.60.3
     SAVE ARTIFACT /usr/bin/golangci-lint
 
 syft:
