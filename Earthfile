@@ -324,15 +324,6 @@ INCLUDE_CORE_LIBS:
     ARG --required LOCATION
     COPY (core+sources/src --LOCATION=libs/core) ${LOCATION}
 
-GO_LINT:
-    FUNCTION
-    COPY (+sources/out --LOCATION=.golangci.yml) .golangci.yml
-    ARG GOPROXY
-    RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
-        --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
-        --mount=type=cache,id=golangci,target=/root/.cache/golangci-lint \
-        golangci-lint run --fix ./...
-
 GO_TIDY:
     FUNCTION
     ARG GOPROXY
