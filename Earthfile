@@ -14,7 +14,7 @@ base-image:
     FROM alpine:3.20
 
 sources-goreleaser:
-    FROM goreleaser/goreleaser-pro:v2.1.0-pro
+    FROM goreleaser/goreleaser-pro:v2.2.0-pro
     SAVE ARTIFACT /usr/bin/goreleaser
 
 sources-golangci-lint:
