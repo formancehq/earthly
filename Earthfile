@@ -17,7 +17,7 @@ sources-goreleaser:
     FROM goreleaser/goreleaser-pro:v2.1.0-pro
     SAVE ARTIFACT /usr/bin/goreleaser
 
-golangci-lint:
+sources-golangci-lint:
     FROM golangci/golangci-lint:v1.60.3
     SAVE ARTIFACT /usr/bin/golangci-lint
 
