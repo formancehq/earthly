@@ -1,6 +1,5 @@
 VERSION 0.8
 
-IMPORT github.com/formancehq/stack/libs/go-libs:feat/monorepo AS libs
 IMPORT github.com/formancehq/stack/libs/core:feat/monorepo AS core
 IMPORT github.com/formancehq/stack/releases:feat/monorepo AS releases
 
@@ -314,11 +313,6 @@ INCLURE_SDK_GO:
     ARG --required LOCATION
     COPY (releases+sdk-generate/go) ${LOCATION}
 
-INCLUDE_GO_LIBS:
-    FUNCTION
-    ARG --required LOCATION
-    COPY (libs+sources/src --LOCATION=libs/go-libs) ${LOCATION}
-
 INCLUDE_CORE_LIBS:
     FUNCTION
     ARG --required LOCATION
@@ -339,7 +333,6 @@ SDK_GO:
     WORKDIR /src/sdks
     RUN --secret SPEAKEASY_API_KEY speakeasy generate sdk -s ./../openapi.yaml -o ./ -l go
     SAVE ARTIFACT /src/releases/sdks/go AS LOCAL ./sdks/go
-
 
 OPENAPI:
     FUNCTION
