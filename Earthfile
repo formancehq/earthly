@@ -235,7 +235,6 @@ GO_COVERAGE:
 GO_LINT:
     FUNCTION
     COPY (+sources/out --LOCATION=.golangci.yml) .golangci.yml
-    RUN golangci-lint run --fix ./...
     ARG GOPROXY
     ARG GOCACHE=/go-cache
     ARG GOMODCACHE=/go-mod-cache
