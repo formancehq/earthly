@@ -240,6 +240,8 @@ GO_LINT:
     ARG GOMODCACHE=/go-mod-cache
     ARG ADDITIONAL_ARGUMENTS
     RUN --mount=type=cache,id=golangci,target=/root/.cache/golangci-lint \
+        --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
+        --mount type=cache,id=gobuild,target=/root/.cache/go-build \
         golangci-lint run --fix ${ADDITIONAL_ARGUMENTS} ./...
 
 GO_COMPILE:
