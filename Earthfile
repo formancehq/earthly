@@ -1,19 +1,39 @@
 VERSION 0.8
 
+IMPORT github.com/formancehq/stack/libs/core:feat/monorepo AS core
+IMPORT github.com/formancehq/stack/releases:feat/monorepo AS releases
+
+sources:
+    FROM +base-image
+    ARG --required LOCATION
+    COPY ${LOCATION} out
+    SAVE ARTIFACT out
+
 base-image:
     FROM alpine:3.20
 
-goreleaser:
-    FROM goreleaser/goreleaser-pro:v1.23.0-pro
+sources-goreleaser:
+    FROM goreleaser/goreleaser-pro:v2.2.0-pro
     SAVE ARTIFACT /usr/bin/goreleaser
 
-golangci-lint:
+sources-golangci-lint:
     FROM golangci/golangci-lint:v1.60.3
     SAVE ARTIFACT /usr/bin/golangci-lint
 
-syft:
+sources-syft:
     FROM anchore/syft:v0.103.1
     SAVE ARTIFACT /syft
+
+sources-speakeasy:
+    FROM +base-image
+    RUN apk update && apk add yarn jq unzip curl
+    ARG VERSION=v1.351.0
+    ARG TARGETARCH
+    RUN echo $VERSION
+    RUN curl -fsSL https://github.com/speakeasy-api/speakeasy/releases/download/${VERSION}/speakeasy_linux_$TARGETARCH.zip -o /tmp/speakeasy_linux_$TARGETARCH.zip
+    RUN unzip /tmp/speakeasy_linux_$TARGETARCH.zip speakeasy
+    RUN chmod +x speakeasy
+    SAVE ARTIFACT speakeasy
 
 builder-image:
     FROM +base-image
@@ -24,9 +44,9 @@ builder-image:
     ARG GOMODCACHE=/go-mod-cache
     ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
     ENV CGO_ENABLED=0
-    COPY (+golangci-lint/*) /usr/bin/golangci-lint
-    COPY (+goreleaser/*) /usr/bin/goreleaser
-    COPY (+syft/*) /usr/bin/syft
+    COPY (+sources-golangci-lint/*) /usr/bin/golangci-lint
+    COPY (+sources-goreleaser/*) /usr/bin/goreleaser
+    COPY (+sources-syft/*) /usr/bin/syft
 
 deployer-image:
     FROM +base-image
@@ -166,6 +186,30 @@ application-sync:
     RUN --secret AUTH_TOKEN \
         argocd app sync $APPLICATION --auth-token $AUTH_TOKEN --server $SERVER --grpc-web
 
+GORELEASER:
+    FUNCTION
+    WORKDIR /src
+    ARG mode=local
+    LET buildArgs = --clean
+    IF [ "$mode" = "local" ]
+        SET buildArgs = --nightly --skip=publish --clean
+    ELSE IF [ "$mode" = "ci" ]
+        SET buildArgs = --nightly --clean
+    END
+    IF [ "$mode" != "local" ]
+        WITH DOCKER
+            RUN --secret GITHUB_TOKEN echo $GITHUB_TOKEN | docker login ghcr.io -u NumaryBot --password-stdin
+        END
+    END
+    WITH DOCKER
+        RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
+            --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
+            --secret GORELEASER_KEY \
+            --secret GITHUB_TOKEN \
+            --secret SPEAKEASY_API_KEY \
+            --secret FURY_TOKEN \
+            goreleaser release -f .goreleaser.yml $buildArgs
+    END
 
 GRPC_GEN:
     FUNCTION
@@ -196,6 +240,8 @@ GO_LINT:
     ARG GOMODCACHE=/go-mod-cache
     ARG ADDITIONAL_ARGUMENTS
     RUN --mount=type=cache,id=golangci,target=/root/.cache/golangci-lint \
+        --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
+        --mount type=cache,id=gobuild,target=/root/.cache/go-build \
         golangci-lint run --fix ${ADDITIONAL_ARGUMENTS} ./...
 
 GO_COMPILE:
@@ -252,3 +298,51 @@ HELM_VALIDATE:
     ARG additionalArgs
     RUN helm lint ./ --strict $additionalArgs
     RUN helm template ./ $additionalArgs
+
+HELM_PUBLISH:
+    FUNCTION
+    ARG --required path
+    WITH DOCKER
+        RUN --secret GITHUB_TOKEN echo $GITHUB_TOKEN | docker login ghcr.io -u NumaryBot --password-stdin
+    END
+    WITH DOCKER
+        RUN helm push ${path} oci://ghcr.io/formancehq/helm
+    END
+
+INCLURE_SDK_GO:
+    FUNCTION
+    ARG --required LOCATION
+    COPY (releases+sdk-generate/go) ${LOCATION}
+
+INCLUDE_CORE_LIBS:
+    FUNCTION
+    ARG --required LOCATION
+    COPY (core+sources/src --LOCATION=libs/core) ${LOCATION}
+
+GO_TIDY:
+    FUNCTION
+    ARG GOPROXY
+    RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
+        --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
+        go mod tidy
+    SAVE ARTIFACT go.* AS LOCAL .
+
+SDK_GO:
+    FUNCTION
+    COPY (+sources-speakeasy/speakeasy) /bin/speakeasy
+    COPY ./sdk/go.gen.yaml /src/sdks/gen.yaml
+    WORKDIR /src/sdks
+    RUN --secret SPEAKEASY_API_KEY speakeasy generate sdk -s ./../openapi.yaml -o ./ -l go
+    SAVE ARTIFACT /src/releases/sdks/go AS LOCAL ./sdks/go
+
+OPENAPI:
+    FUNCTION
+    FROM node:20-alpine
+    RUN apk update && apk add yq
+    RUN npm install -g openapi-merge-cli
+    WORKDIR /src
+    COPY --dir openapi openapi
+    COPY (+sources/out/base.yaml --LOCATION=sdk/) ./openapi/base.yaml
+    RUN openapi-merge-cli --config ./openapi/openapi-merge.json
+    RUN yq -oy ./openapi.json > openapi.yaml
+    SAVE ARTIFACT ./openapi.yaml AS LOCAL ./openapi.yaml
