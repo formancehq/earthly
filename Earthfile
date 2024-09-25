@@ -124,58 +124,18 @@ grpc-base:
         go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
 base-argocd:
-    FROM --pass-args +base-image
+    FROM +base-image
     RUN apk add curl
     RUN curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 && chmod 555 /usr/local/bin/argocd
 
-# Should rename as `application-set`
-# Deprecated stack #1479
-deployer-module:
-    FROM --pass-args +base-argocd 
-
-    ARG WITH_SYNC=true
-    ARG --required ARGS
-    LET APPLICATION=staging-eu-west-1-hosting-regions
-    LET SERVER=argocd.internal.formance.cloud
-    
-    RUN --secret AUTH_TOKEN \
-        argocd app set $APPLICATION \ 
-        $ARGS \
-        --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web
-
-    IF [ "$WITH_SYNC" = "true" ]
-        BUILD +deploy-staging --APPLICATION=staging-eu-west-1-hosting-regions
-    END
-
 deploy-staging:
-    FROM +base-image
-    RUN echo "DEPLOY STAGING"
-
-application-set:
-    FROM --pass-args +base-argocd 
-
-    ARG --required ARGS
-    ARG WITH_SYNC=false
+    FROM +base-argocd
+    ARG --required COMPONENT
+    ARG --required TAG
     LET APPLICATION=staging-eu-west-1-hosting-regions
     LET SERVER=argocd.internal.formance.cloud
-    
-    RUN --secret AUTH_TOKEN \
-        argocd app set $APPLICATION \ 
-        $ARGS \
-        --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web
-
-    IF [ "$WITH_SYNC" = "true" ]
-        BUILD +application-sync --APPLICATION=staging-eu-west-1-hosting-regions
-    END
-
-application-sync:
-    FROM --pass-args +base-argocd
-    
-    ARG --required APPLICATION
-    LET SERVER=argocd.internal.formance.cloud
-    
-    RUN --secret AUTH_TOKEN \
-        argocd app sync $APPLICATION --auth-token $AUTH_TOKEN --server $SERVER --grpc-web
+    RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app set $APPLICATION --parameter versions.files.default.$COMPONENT=$TAG
+    RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app sync $APPLICATION
 
 GORELEASER:
     FUNCTION
