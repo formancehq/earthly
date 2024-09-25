@@ -147,18 +147,9 @@ deployer-module:
         BUILD +deploy-staging --APPLICATION=staging-eu-west-1-hosting-regions
     END
 
-
-# Should rename as `application-sync`
-# Deprecated stack #1479
 deploy-staging:
-    FROM --pass-args +base-argocd
-    
-    ARG --required APPLICATION
-    LET SERVER=argocd.internal.formance.cloud
-    
-    RUN --secret AUTH_TOKEN \
-        argocd app sync $APPLICATION --auth-token $AUTH_TOKEN --server $SERVER --grpc-web
-
+    FROM +base-image
+    RUN echo "DEPLOY STAGING"
 
 application-set:
     FROM --pass-args +base-argocd 
