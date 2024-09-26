@@ -153,7 +153,7 @@ GORELEASER:
         END
     END
     WITH DOCKER
-        RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
+        RUN --mount=type=cache,id=gomod,target=/root/.cache/go-mod \
             --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
             --secret GORELEASER_KEY \
             --secret GITHUB_TOKEN \
@@ -174,7 +174,7 @@ GO_TESTS:
     FUNCTION
     ARG GOPROXY
     ARG ADDITIONAL_ARGUMENTS
-    RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
+    RUN --mount type=cache,id=gopkgcache,target=/root/.cache/go-mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
         go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./... ${ADDITIONAL_ARGUMENTS}
 
@@ -191,7 +191,7 @@ GO_LINT:
     ARG GOMODCACHE=/go-mod-cache
     ARG ADDITIONAL_ARGUMENTS
     RUN --mount=type=cache,id=golangci,target=/root/.cache/golangci-lint \
-        --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
+        --mount type=cache,id=gopkgcache,target=/root/.cache/go-mod \
         --mount type=cache,id=gobuild,target=/root/.cache/go-build \
         golangci-lint run --fix ${ADDITIONAL_ARGUMENTS} ./...
 
@@ -202,7 +202,7 @@ GO_COMPILE:
     ARG EARTHLY_BUILD_SHA
     LET GIT_PATH=$(head -1 go.mod | cut -d\\  -f2)
     ARG ADDITIONAL_ARGUMENTS
-    RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
+    RUN --mount type=cache,id=gopkgcache,target=/root/.cache/go-mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
         go build -o main \
         -ldflags="-X ${GIT_PATH}/cmd.Version=${VERSION} \
@@ -215,7 +215,7 @@ GO_INSTALL:
     ARG package
     ARG GOPROXY
     ARG ADDITIONAL_ARGUMENTS
-    RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
+    RUN --mount type=cache,id=gopkgcache,target=/root/.cache/go-mod \
         --mount type=cache,id=gobuild,target=/root/.cache/go-build \
         go install ${ADDITIONAL_ARGUMENTS} ${package}
 
@@ -232,7 +232,7 @@ GO_MOD_TIDY:
     FUNCTION
     ARG GOPROXY
     ARG ADDITIONAL_ARGUMENTS
-    RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
+    RUN --mount type=cache,id=gopkgcache,target=/root/.cache/go-mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
         go mod tidy ${ADDITIONAL_ARGUMENTS}
 
@@ -240,7 +240,7 @@ GO_GENERATE:
     FUNCTION
     ARG GOPROXY
     ARG ADDITIONAL_ARGUMENTS
-    RUN --mount type=cache,id=gopkgcache,target=${GOPATH}/pkg/mod \
+    RUN --mount type=cache,id=gopkgcache,target=/root/.cache/go-mod \
         --mount type=cache,id=gobuildcache,target=/root/.cache/go-build \
         go generate ${ADDITIONAL_ARGUMENTS} ./...
 
@@ -273,7 +273,7 @@ INCLUDE_CORE_LIBS:
 GO_TIDY:
     FUNCTION
     ARG GOPROXY
-    RUN --mount=type=cache,id=gomod,target=${GOPATH}/pkg/mod \
+    RUN --mount=type=cache,id=gomod,target=/root/.cache/go-mod \
         --mount=type=cache,id=gobuild,target=/root/.cache/go-build \
         go mod tidy
     SAVE ARTIFACT go.* AS LOCAL .
