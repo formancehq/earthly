@@ -153,8 +153,7 @@ GORELEASER:
         END
     END
     WITH DOCKER
-        RUN --mount=type=cache,id=gomod,target=/tmp/earthly/go-mod \
-            --mount=type=cache,id=gobuild,target=/tmp/earthly/go-build \
+        RUN \
             --secret GORELEASER_KEY \
             --secret GITHUB_TOKEN \
             --secret SPEAKEASY_API_KEY \
@@ -174,9 +173,7 @@ GO_TESTS:
     FUNCTION
     ARG GOPROXY
     ARG ADDITIONAL_ARGUMENTS
-    RUN --mount type=cache,id=gopkgcache,target=/tmp/earthly/go-mod \
-        --mount type=cache,id=gobuildcache,target=/tmp/earthly/go-build \
-        go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./... ${ADDITIONAL_ARGUMENTS}
+    RUN go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./... ${ADDITIONAL_ARGUMENTS}
 
 GO_COVERAGE:
     FUNCTION
@@ -190,10 +187,7 @@ GO_LINT:
     ARG GOCACHE=/go-cache
     ARG GOMODCACHE=/go-mod-cache
     ARG ADDITIONAL_ARGUMENTS
-    RUN --mount=type=cache,id=golangci,target=/tmp/earthly/golangci-lint \
-        --mount type=cache,id=gopkgcache,target=/tmp/earthly/go-mod \
-        --mount type=cache,id=gobuild,target=/tmp/earthly/go-build \
-        golangci-lint run --fix ${ADDITIONAL_ARGUMENTS} ./...
+    RUN golangci-lint run --fix ${ADDITIONAL_ARGUMENTS} ./...
 
 GO_COMPILE:
     FUNCTION
@@ -202,9 +196,7 @@ GO_COMPILE:
     ARG EARTHLY_BUILD_SHA
     LET GIT_PATH=$(head -1 go.mod | cut -d\\  -f2)
     ARG ADDITIONAL_ARGUMENTS
-    RUN --mount type=cache,id=gopkgcache,target=/tmp/earthly/go-mod \
-        --mount type=cache,id=gobuildcache,target=/tmp/earthly/go-build \
-        go build -o main \
+    RUN go build -o main \
         -ldflags="-X ${GIT_PATH}/cmd.Version=${VERSION} \
         -X ${GIT_PATH}/cmd.BuildDate=$(date +%s) \
         -X ${GIT_PATH}/cmd.Commit=${EARTHLY_BUILD_SHA}" ${ADDITIONAL_ARGUMENTS} ./
@@ -215,9 +207,7 @@ GO_INSTALL:
     ARG package
     ARG GOPROXY
     ARG ADDITIONAL_ARGUMENTS
-    RUN --mount type=cache,id=gopkgcache,target=/tmp/earthly/go-mod \
-        --mount type=cache,id=gobuild,target=/tmp/earthly/go-build \
-        go install ${ADDITIONAL_ARGUMENTS} ${package}
+    RUN go install ${ADDITIONAL_ARGUMENTS} ${package}
 
 SAVE_IMAGE:
     FUNCTION
@@ -232,17 +222,13 @@ GO_MOD_TIDY:
     FUNCTION
     ARG GOPROXY
     ARG ADDITIONAL_ARGUMENTS
-    RUN --mount type=cache,id=gopkgcache,target=/tmp/earthly/go-mod \
-        --mount type=cache,id=gobuildcache,target=/tmp/earthly/go-build \
-        go mod tidy ${ADDITIONAL_ARGUMENTS}
+    RUN go mod tidy ${ADDITIONAL_ARGUMENTS}
 
 GO_GENERATE:
     FUNCTION
     ARG GOPROXY
     ARG ADDITIONAL_ARGUMENTS
-    RUN --mount type=cache,id=gopkgcache,target=/tmp/earthly/go-mod \
-        --mount type=cache,id=gobuildcache,target=/tmp/earthly/go-build \
-        go generate ${ADDITIONAL_ARGUMENTS} ./...
+    RUN go generate ${ADDITIONAL_ARGUMENTS} ./...
 
 HELM_VALIDATE:
     FUNCTION
@@ -273,9 +259,7 @@ INCLUDE_CORE_LIBS:
 GO_TIDY:
     FUNCTION
     ARG GOPROXY
-    RUN --mount=type=cache,id=gomod,target=/tmp/earthly/go-mod \
-        --mount=type=cache,id=gobuild,target=/tmp/earthly/go-build \
-        go mod tidy
+    RUN go mod tidy
     SAVE ARTIFACT go.* AS LOCAL .
 
 SDK_GO:
