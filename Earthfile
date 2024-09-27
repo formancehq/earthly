@@ -281,9 +281,3 @@ OPENAPI:
     RUN openapi-merge-cli --config ./openapi/openapi-merge.json
     RUN yq -oy ./openapi.json > openapi.yaml
     SAVE ARTIFACT ./openapi.yaml AS LOCAL ./openapi.yaml
-
-run-ci:
-    ARG project
-    ARG commit
-    BUILD github.com/formancehq/$project:$commit+pre-commit
-    BUILD github.com/formancehq/$project:$commit+tests
