@@ -284,6 +284,6 @@ OPENAPI:
 
 run-ci:
     ARG project
-    ARG branch
-    BUILD github.com/formancehq/$project:$branch+pre-commit
-    BUILD github.com/formancehq/$project:$branch+tests
+    ARG commit
+    BUILD github.com/formancehq/$project:$commit+pre-commit
+    BUILD github.com/formancehq/$project:$commit+tests
