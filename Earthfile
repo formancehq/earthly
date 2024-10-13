@@ -65,12 +65,8 @@ vcluster-deployer-image:
     COPY --dir ./vcluster/charts/tld-certificates .
     COPY --dir ./vcluster/charts/vcluster-ingress .
     ARG --required user
-    RUN --secret tld helm upgrade --install vcluster-$user-ingress ./vcluster-ingress \
-        --namespace vcluster-$user \
-        --create-namespace \
-        --set tld=$tld \
-        --set user=$user
     COPY ./vcluster/values.yaml .
+
     RUN helm package ./tld-certificates
     ENV tldCertificatesChartBundled=$(cat tld-certificates-0.6.1.tgz | base64 -w 0)
 
@@ -78,7 +74,12 @@ vcluster-deployer-image:
     RUN --secret tld echo "tld: $tld" >> /tmp/values.yaml
 
     LET values=$(cat /tmp/values.yaml)
-    RUN --secret tld helm upgrade --install $user vcluster \
+    RUN --no-cache --secret tld helm upgrade --install vcluster-$user-ingress ./vcluster-ingress \
+        --namespace vcluster-$user \
+        --create-namespace \
+        --set tld=$tld \
+        --set user=$user
+    RUN --no-cache --secret tld helm upgrade --install $user vcluster \
         --repo https://charts.loft.sh \
         --version v0.19.7 \
         --namespace vcluster-$user \
@@ -93,6 +94,7 @@ vcluster-deployer-image:
         --set init.helm[0].release.namespace=formance \
         --values values.yaml \
         --repository-config=''
+
     RUN kubectl -n vcluster-$user get secrets/vc-$user || kubectl -n vcluster-$user create secret generic vc-$user
     RUN while [ "$(kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}')" == "" ]; do sleep 1s; done
     RUN kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}' | base64 -d > /root/.kube/vcluster-config
@@ -128,14 +130,24 @@ base-argocd:
     RUN apk add curl
     RUN curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 && chmod 555 /usr/local/bin/argocd
 
-deploy-staging:
+deploy-app:
     FROM +base-argocd
-    ARG --required COMPONENT
-    ARG --required TAG
-    LET APPLICATION=staging-eu-west-1-hosting-regions
+    ARG ADDITIONAL_ARGUMENTS
+    ARG --required APPLICATION
     LET SERVER=argocd.internal.formance.cloud
-    RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app set $APPLICATION --parameter versions.files.default.$COMPONENT=$TAG
-    RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app sync $APPLICATION
+    RUN --secret AUTH_TOKEN argocd set $APPLICATION \
+        --auth-token=$AUTH_TOKEN \
+        --server=$SERVER \
+        --grpc-web app $ADDITIONAL_ARGUMENTS
+    
+    RUN --secret AUTH_TOKEN argocd app sync $APPLICATION \
+        --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web
+
+# todo(david): need a way to share the same 
+deploy-staging:
+  ARG --required COMPONENT
+  ARG --required TAG
+  BUILD --no-cache --pass-args +deploy-app --APPLICATION=staging-eu-west-1-hosting-regions --ADDITIONAL_ARGUMENTS="--parameter versions.files.default.${COMPONENT}=${TAG}"
 
 GORELEASER:
     FUNCTION
@@ -160,6 +172,29 @@ GORELEASER:
             --secret FURY_TOKEN \
             goreleaser release -f .goreleaser.yml $buildArgs
     END
+
+install-dev-env:
+    FROM +base-image
+    COPY ./dev /dev
+    WORKDIR /dev
+
+    BUILD --pass-args github.com/formancehq/console:$(yq -e '.console.version' module.yaml)+deploy
+    BUILD --pass-args github.com/formancehq/membership-api:$(yq -e '.membership.version' module.yaml)+deploy
+    BUILD --pass-args github.com/formancehq/stargate:$(yq -e '.stargate.version' module.yaml)+deploy 
+
+    WAIT
+        BUILD --pass-args github.com/formancehq/operator:$(yq -e '.operator.version' module.yaml)+deploy
+    END
+
+    BUILD --pass-args github.com/formancehq/ledger:$(yq -e '.ledger.version' module.yaml)+deploy 
+    BUILD --pass-args github.com/formancehq/payments$(yq -e '.payments.version' module.yaml)+deploy
+    BUILD --pass-args github.com/formancehq/reconciliation:$(yq -e '.reconciliation.version' module.yaml)+deploy 
+    BUILD --pass-args github.com/formancehq/gateway:$(yq -e '.gateway.version' module.yaml)+deploy 
+    BUILD --pass-args github.com/formancehq/orchestration:$(yq -e '.orchestration.version' module.yaml)+deploy 
+    BUILD --pass-args github.com/formancehq/search:$(yq -e '.search.version' module.yaml)+deploy 
+    BUILD --pass-args github.com/formancehq/agent:$(yq -e '.agent.version' module.yaml)+deploy 
+    BUILD --pass-args github.com/formancehq/auth:$(yq -e '.auth.version' module.yaml)+deploy
+    BUILD --pass-args github.com/formancehq/webhooks:$(yq -e '.webhooks.version' module.yaml)+deploy
 
 GRPC_GEN:
     FUNCTION
