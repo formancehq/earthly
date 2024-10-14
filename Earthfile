@@ -1,8 +1,5 @@
 VERSION 0.8
 
-IMPORT github.com/formancehq/stack/libs/core:feat/monorepo AS core
-IMPORT github.com/formancehq/stack/releases:feat/monorepo AS releases
-
 sources:
     FROM +base-image
     ARG --required LOCATION
@@ -10,18 +7,18 @@ sources:
     SAVE ARTIFACT out
 
 base-image:
-    FROM alpine:3.20
+    FROM public.ecr.aws/docker/library/alpine:3.20
 
 sources-goreleaser:
-    FROM goreleaser/goreleaser-pro:v2.2.0-pro
+    FROM ghcr.io/goreleaser/goreleaser-pro:v2.2.0-pro
     SAVE ARTIFACT /usr/bin/goreleaser
 
 sources-golangci-lint:
-    FROM golangci/golangci-lint:v1.60.3
+    FROM golangci/golangci-lint:v1.60.3 # TODO: Use another Proxy ? Or build image myself ?
     SAVE ARTIFACT /usr/bin/golangci-lint
 
 sources-syft:
-    FROM anchore/syft:v0.103.1
+    FROM ghcr.io/anchore/syft:v0.103.1
     SAVE ARTIFACT /syft
 
 sources-speakeasy:
@@ -245,16 +242,6 @@ HELM_PUBLISH:
     WITH DOCKER
         RUN helm push ${path} oci://ghcr.io/formancehq/helm
     END
-
-INCLURE_SDK_GO:
-    FUNCTION
-    ARG --required LOCATION
-    COPY (releases+sdk-generate/go) ${LOCATION}
-
-INCLUDE_CORE_LIBS:
-    FUNCTION
-    ARG --required LOCATION
-    COPY (core+sources/src --LOCATION=libs/core) ${LOCATION}
 
 GO_TIDY:
     FUNCTION
