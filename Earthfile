@@ -151,29 +151,6 @@ deploy-staging:
     RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app set $APPLICATION --parameter versions.files.default.$COMPONENT=$TAG
     RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app sync $APPLICATION
 
-# install-dev-env Install dev environment depending on .dev/services.yaml version
-install-dev-env:
-    BUILD --pass-args +deploy
-    WORKDIR /src
-    COPY .dev/services.yaml ./services.yaml
-
-    BUILD --pass-args github.com/formancehq/console:$(yq -e '.console.version' services.yaml)+deploy
-    WAIT
-        BUILD --pass-args github.com/formancehq/operator:$(yq )+deploy 
-    END
-    BUILD --pass-args github.com/formancehq/agent:$(yq -e '.agent.version' services.yaml)+deploy 
-
-    BUILD --pass-args github.com/formancehq/ledger:$(yq -e '.ledger.version' services.yaml)+deploy 
-    BUILD --pass-args github.com/formancehq/payments:$(yq -e '.payments.version' services.yaml)+deploy
-    BUILD --pass-args github.com/formancehq/reconciliation:$(yq -e '.reconciliation.version' services.yaml)+deploy
-    BUILD --pass-args github.com/formancehq/auth:$(yq -e '.auth.version' services.yaml)+deploy 
-    BUILD --pass-args github.com/formancehq/gateway:$(yq -e '.gateway.version' services.yaml)+deploy
-    BUILD --pass-args github.com/formancehq/orchestration:$(yq -e '.orchestration.version' services.yaml)+deploy
-    BUILD --pass-args github.com/formancehq/search:$(yq -e '.search.version' services.yaml)+deploy
-    BUILD --pass-args github.com/formancehq/stargate:$(yq -e '.stargate.version' services.yaml)+deploy
-    BUILD --pass-args github.com/formancehq/wallets:$(yq -e '.wallets.version' services.yaml)+deploy
-    BUILD --pass-args github.com/formancehq/webhooks:$(yq -e '.webhooks.version' services.yaml)+deploy
-
 # docs Some docs
 # in multinline
 docs:
