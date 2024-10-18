@@ -9,21 +9,26 @@ sources:
     COPY ${LOCATION} out
     SAVE ARTIFACT out
 
+# base-image Base image
 base-image:
     FROM alpine:3.20
 
+# sources-goreleaser Goreleaser CLI
 sources-goreleaser:
     FROM goreleaser/goreleaser-pro:v2.2.0-pro
     SAVE ARTIFACT /usr/bin/goreleaser
 
+# sources-golangci-lint GolangCI Lint Cli
 sources-golangci-lint:
     FROM golangci/golangci-lint:v1.60.3
     SAVE ARTIFACT /usr/bin/golangci-lint
 
+# sources-syft Syft CLI
 sources-syft:
     FROM anchore/syft:v0.103.1
     SAVE ARTIFACT /syft
 
+# sources-speakeasy Speakeasy CLI
 sources-speakeasy:
     FROM +base-image
     RUN apk update && apk add yarn jq unzip curl
@@ -35,6 +40,7 @@ sources-speakeasy:
     RUN chmod +x speakeasy
     SAVE ARTIFACT speakeasy
 
+# builder-image Builder image
 builder-image:
     FROM +base-image
     RUN apk update && apk add go git curl make pkgconfig bash docker jq
@@ -48,6 +54,7 @@ builder-image:
     COPY (+sources-goreleaser/*) /usr/bin/goreleaser
     COPY (+sources-syft/*) /usr/bin/syft
 
+# deployer-image Deployer image on main cluster
 deployer-image:
     FROM +base-image
     RUN apk update && \
@@ -60,6 +67,7 @@ deployer-image:
     RUN kubectl config set-context default --cluster=default --user=default
     RUN kubectl config use-context default
 
+# vcluster-deployer-image Deploy in a vcluster
 vcluster-deployer-image:
     FROM +deployer-image
     COPY --dir ./vcluster/charts/tld-certificates .
@@ -101,10 +109,12 @@ vcluster-deployer-image:
 
     SAVE IMAGE vcluster-$user
 
+# final-image Final image
 final-image:
     FROM +base-image
     RUN apk update && apk add ca-certificates curl
 
+# run-in-all-vclusters Run a command in all vclusters
 run-in-all-vclusters:
     FROM +deployer-image
     ARG --required cmd
@@ -113,21 +123,25 @@ run-in-all-vclusters:
         RUN --no-cache $cmd
     END
 
+# helm-base Helm base image
 helm-base:
     FROM +base-image
     RUN apk update && apk add openssl helm
 
+# grpc-base Base image for gRPC
 grpc-base:
     FROM +builder-image
     RUN apk add --no-cache protobuf git protobuf-dev && \
         go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28 && \
         go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 
+# base-argocd Download the latest argocd binary
 base-argocd:
     FROM +base-image
     RUN apk add curl
     RUN curl -sSL -o /usr/local/bin/argocd https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64 && chmod 555 /usr/local/bin/argocd
 
+# deploy-staging Deploy a component to staging
 deploy-staging:
     FROM +base-argocd
     ARG --required COMPONENT
@@ -136,6 +150,49 @@ deploy-staging:
     LET SERVER=argocd.internal.formance.cloud
     RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app set $APPLICATION --parameter versions.files.default.$COMPONENT=$TAG
     RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app sync $APPLICATION
+
+# install-dev-env Install dev environment depending on .dev/services.yaml version
+install-dev-env:
+    BUILD --pass-args +deploy
+    WORKDIR /src
+    COPY .dev/services.yaml ./services.yaml
+
+    BUILD --pass-args github.com/formancehq/console:$(yq -e '.console.version' services.yaml)+deploy
+    WAIT
+        BUILD --pass-args github.com/formancehq/operator:$(yq )+deploy 
+    END
+    BUILD --pass-args github.com/formancehq/agent:$(yq -e '.agent.version' services.yaml)+deploy 
+
+    BUILD --pass-args github.com/formancehq/ledger:$(yq -e '.ledger.version' services.yaml)+deploy 
+    BUILD --pass-args github.com/formancehq/payments:$(yq -e '.payments.version' services.yaml)+deploy
+    BUILD --pass-args github.com/formancehq/reconciliation:$(yq -e '.reconciliation.version' services.yaml)+deploy
+    BUILD --pass-args github.com/formancehq/auth:$(yq -e '.auth.version' services.yaml)+deploy 
+    BUILD --pass-args github.com/formancehq/gateway:$(yq -e '.gateway.version' services.yaml)+deploy
+    BUILD --pass-args github.com/formancehq/orchestration:$(yq -e '.orchestration.version' services.yaml)+deploy
+    BUILD --pass-args github.com/formancehq/search:$(yq -e '.search.version' services.yaml)+deploy
+    BUILD --pass-args github.com/formancehq/stargate:$(yq -e '.stargate.version' services.yaml)+deploy
+    BUILD --pass-args github.com/formancehq/wallets:$(yq -e '.wallets.version' services.yaml)+deploy
+    BUILD --pass-args github.com/formancehq/webhooks:$(yq -e '.webhooks.version' services.yaml)+deploy
+
+# docs Some docs
+# in multinline
+docs:
+    DO +EARTHLY_DOCS
+
+
+EARTHLY_DOCS:
+    FUNCTION
+    FROM +base-image
+    WORKDIR /src
+    RUN apk add git
+    RUN /bin/sh -c 'wget https://github.com/earthly/earthly/releases/latest/download/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'
+    COPY . .
+    ARG additionalArgs="--long"
+    WITH DOCKER
+        RUN mkdir -p docs && find . -name 'Earthfile' | while read -r file; do dir=$(dirname "$file"); clean_dir=$(echo "$dir" | sed "s|^\./docs||; s|^\./||; s|/$||;"); markdown_file="docs/$clean_dir/readme.md"; mkdir -p "$(dirname "$markdown_file")"; touch "$markdown_file"; earthly doc $additionalArgs "$dir" >> "$markdown_file"; done
+    END
+    SAVE ARTIFACT /src/docs AS LOCAL ./docs/earthly
+
 
 GORELEASER:
     FUNCTION
