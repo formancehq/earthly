@@ -1,14 +1,14 @@
 version: 2
 
 nightly:
-  name_template: '{{ .FullCommit }}'
+  version_template: '{{ .FullCommit }}'
   publish_release: false
 
 checksum:
   name_template: '{{.ProjectName}}_checksums.txt'
 
 snapshot:
-  name_template: "{{ .Version }}"
+  version_template: "{{ .Version }}"
 
 changelog:
   sort: asc
