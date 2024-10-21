@@ -156,7 +156,6 @@ deploy-staging:
 docs:
     DO +EARTHLY_DOCS
 
-
 EARTHLY_DOCS:
     FUNCTION
     FROM +base-image
@@ -249,8 +248,12 @@ SAVE_IMAGE:
     ARG --required COMPONENT
     ARG REPOSITORY=ghcr.io
     ENV OTEL_SERVICE_NAME ${COMPONENT}
-    # todo(gfyrag): make insecure configurable
-    SAVE IMAGE --push --insecure ${REPOSITORY}/formancehq/${COMPONENT}:${TAG}
+    ARG INSECURE=1
+    IF [ "$INSECURE" = "1" ]
+        SAVE IMAGE --push --insecure ${REPOSITORY}/formancehq/${COMPONENT}:${TAG}
+    ELSE
+        SAVE IMAGE --push ${REPOSITORY}/formancehq/${COMPONENT}:${TAG}
+    END
 
 GO_MOD_TIDY:
     FUNCTION
