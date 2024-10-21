@@ -5,7 +5,6 @@ metadata:
   name: letsencrypt-production
 spec:
   acme:
-    email: geoffrey.ragot@gmail.com
     server: https://acme-v02.api.letsencrypt.org/directory
     privateKeySecretRef:
       name: letsencrypt-account-key-production
