@@ -17,3 +17,10 @@ logs:
     level: DEBUG
   access:
     enabled: true
+
+ports:
+  websecure:
+    middlewares:
+      - name: ipwhitelist
+        sourcerange:
+          -
