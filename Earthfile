@@ -169,16 +169,22 @@ docs:
 
 EARTHLY_DOCS:
     FUNCTION
+    LOCALLY
+    LET earthfiles=$(find . -name 'Earthfile') 
     FROM +base-image
     WORKDIR /src
-    RUN apk add git
+    RUN apk update && apk add git
     RUN /bin/sh -c 'wget https://github.com/earthly/earthly/releases/latest/download/earthly-linux-amd64 -O /usr/local/bin/earthly && chmod +x /usr/local/bin/earthly'
-    COPY . .
+    FOR earthfile IN $earthfiles
+        COPY $earthfile $earthfile 
+    END
     ARG additionalArgs="--long"
+
     WITH DOCKER
-        RUN mkdir -p docs && find . -name 'Earthfile' | while read -r file; do dir=$(dirname "$file"); clean_dir=$(echo "$dir" | sed "s|^\./docs||; s|^\./||; s|/$||;"); markdown_file="docs/$clean_dir/readme.md"; mkdir -p "$(dirname "$markdown_file")"; touch "$markdown_file"; earthly doc $additionalArgs "$dir" >> "$markdown_file"; done
+        RUN mkdir -p docs && find . -name 'Earthfile' | while read -r file; do dir=$(dirname "$file"); clean_dir=$(echo "$dir" | sed "s|^\./docs||; s|^\./||; s|/$||;"); markdown_file="docs/$clean_dir/README.md"; mkdir -p "$(dirname "$markdown_file")"; touch "$markdown_file"; earthly doc $additionalArgs "$dir" >> "$markdown_file"; done
     END
     SAVE ARTIFACT /src/docs AS LOCAL ./docs/earthly
+
 
 
 GORELEASER:
