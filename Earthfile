@@ -151,14 +151,18 @@ deploy-staging:
     RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app set $APPLICATION --parameter versions.files.default.$COMPONENT=$TAG
     RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app sync $APPLICATION
 
-# deploy-staging-parameters Deploy a component to staging
-deploy-staging-parameters:
+# deploy-staging-with-args Deploy a to staging using additional args
+# in multinline
+# ADDITIONAL_ARGS= \
+# --parameter cloudprem.membership.tag= \
+# --parameter cloudprem.portal.image=  \
+# --parameter cloudprem.portal.image= \
+deploy-staging-args:
     FROM +base-argocd
-    ARG --required PARAMETERS
-    ARG --required TAG
+    ARG --required ADDITIONAL_ARGS
     ARG --required APPLICATION
     LET SERVER=argocd.internal.formance.cloud
-    RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app set $APPLICATION --parameter $PARAMETERS
+    RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app set $APPLICATION $ADDITIONAL_ARGS
     RUN --secret AUTH_TOKEN argocd --auth-token=$AUTH_TOKEN --server=$SERVER --grpc-web app sync $APPLICATION
 
 
