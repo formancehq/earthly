@@ -43,7 +43,8 @@ sources-speakeasy:
 # builder-image Builder image
 builder-image:
     FROM +base-image
-    RUN apk update && apk add go git curl make pkgconfig bash docker jq
+    RUN apk update && apk add git curl make pkgconfig bash docker jq
+    RUN apk add go --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community
     ENV GOPATH /go
     ENV GOTOOLCHAIN=local
     ARG GOCACHE=/go-cache
