@@ -96,16 +96,12 @@ docker_manifests:
     image_templates:
       - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-amd64'
       - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-arm64'
-  - name_template: '{{ if not .IsNightly }}ghcr.io/formancehq/{{ .ProjectName }}:latest{{ end }}'
+  - name_template: '{{ if not .IsNightly }}{{if not .Prerelease }}ghcr.io/formancehq/{{ .ProjectName }}:latest{{ end }}{{ end }}'
     image_templates:
       - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-amd64'
       - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-arm64'
   # From scratch
   - name_template: 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-scratch'
-    image_templates:
-      - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-amd64-scratch'
-      - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-arm64-scratch'
-  - name_template: '{{ if not .IsNightly }}ghcr.io/formancehq/{{ .ProjectName }}:latest-scratch{{ end }}'
     image_templates:
       - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-amd64-scratch'
       - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-arm64-scratch'
