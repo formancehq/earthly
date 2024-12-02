@@ -92,10 +92,17 @@ dockers:
       - --label=org.opencontainers.image.licenses=MIT
 
 docker_manifests:
-  - name_template: 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if .IsNightly }}{{ .Branch }}{{ end}}{{ if not .IsNightly }}v{{ end }}{{ .Version }}{{ end }}'
+  # If Nightly, use the branch name as the manifest name
+  - name_template: '{{ if .IsNightly }}ghcr.io/formancehq/{{ .ProjectName }}:{{ .Branch }}{{ end }}'
     image_templates:
       - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-amd64'
       - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-arm64'
+  # If not Nightly, use the version as the manifest name and if Nightly add v to the tag
+  - name_template: 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}'
+    image_templates:
+      - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-amd64'
+      - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-arm64'
+  # If not Nightly and not a prerelease, use latest as the manifest name
   - name_template: '{{ if not .IsNightly }}{{if not .Prerelease }}ghcr.io/formancehq/{{ .ProjectName }}:latest{{ end }}{{ end }}'
     image_templates:
       - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-amd64'
