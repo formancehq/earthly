@@ -93,10 +93,10 @@ dockers:
 
 docker_manifests:
   # If Nightly, use the branch name as the manifest name
-  - name_template: '{{ if .IsNightly }}ghcr.io/formancehq/{{ .ProjectName }}:{{ .Branch }}{{ end }}'
-    image_templates:
-      - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-amd64'
-      - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-arm64'
+#  - name_template: '{{ if .IsNightly }}ghcr.io/formancehq/{{ .ProjectName }}:{{ .Branch }}{{ end }}'
+#    image_templates:
+#      - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-amd64'
+#      - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-arm64'
   # If not Nightly, use the version as the manifest name and if Nightly add v to the tag
   - name_template: 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}'
     image_templates:
