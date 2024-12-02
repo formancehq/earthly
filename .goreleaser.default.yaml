@@ -92,7 +92,7 @@ dockers:
       - --label=org.opencontainers.image.licenses=MIT
 
 docker_manifests:
-  - name_template: 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if .Branch == "main" }}main{{ else }}{{ if not .IsNightly }}v{{ end }}{{ .Version }}{{ end }}'
+  - name_template: 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if .IsNightly }}{{ .Branch }}{{ end}}{{ if not .IsNightly }}v{{ end }}{{ .Version }}{{ end }}'
     image_templates:
       - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-amd64'
       - 'ghcr.io/formancehq/{{ .ProjectName }}:{{ if not .IsNightly }}v{{ end }}{{ .Version }}-arm64'
