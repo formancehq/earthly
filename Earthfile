@@ -20,7 +20,7 @@ sources-goreleaser:
 
 # sources-golangci-lint GolangCI Lint Cli
 sources-golangci-lint:
-    FROM golangci/golangci-lint:v1.60.3
+    FROM golangci/golangci-lint:v1.64
     SAVE ARTIFACT /usr/bin/golangci-lint
 
 # sources-syft Syft CLI
