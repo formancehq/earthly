@@ -1,0 +1,61 @@
+exporters:
+  enabled: false
+operator:
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 150m
+    requests:
+      memory: 64Mi
+      cpu: 50m
+
+blackboxExporter:
+  enabled: false
+  resources:
+    requests:
+      memory: 64Mi
+      cpu: 50m
+    limits:
+      memory: 256Mi
+      cpu: 200m
+
+alertmanager:
+  enabled: false
+  resources:
+    requests:
+      memory: 64Mi
+      cpu: 50m
+    limits:
+      memory: 256Mi
+      cpu: 1
+
+prometheus:
+  retention: 6h
+  # disableCompaction: true
+
+  remoteWrite: []
+  # - url: http://grafana-mimir-gateway.mimir-system.svc/api/v1/push
+  # - url: http://thanos-receive.thanos-system.svc:19291/api/v1/receive
+
+  enableFeatures:
+  - exemplar-storage
+  - otlp-write-receiver
+  - remote-write-receiver
+  additionalArgs:
+  #   value: "true"
+  # - name: web.enable-otlp-receiver
+  - name: web.enable-remote-write-receiver
+  resources:
+    limits:
+      # memory: 1024Mi
+      cpu: 1
+    requests:
+      memory: 512Mi
+      cpu: 50m
+
+  ingress:
+    enabled: true
+    hostname: prometheus.formance.dev
+
+  persistence:
+    enabled: false

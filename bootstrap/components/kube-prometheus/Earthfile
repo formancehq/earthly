@@ -1,0 +1,14 @@
+VERSION 0.8
+
+IMPORT ../../.. AS core
+
+deploy:
+    FROM --pass-args core+deployer-image
+    COPY values.yaml .
+    RUN helm upgrade --install \
+        --namespace prometheus-system \
+        --create-namespace \
+        --values values.yaml \
+        --version 11.X.X \
+        kube-prometheus oci://registry-1.docker.io/bitnamicharts/kube-prometheus
+        

@@ -1,19 +1,91 @@
+mode: "deployment"
+ports:
+  metrics:
+    enabled: true
+    containerPort: 8889
+    servicePort: 8889
+
+serviceMonitor:
+  enabled: true
+
+image:
+  repository: otel/opentelemetry-collector-contrib
+
 config:
   exporters:
     otlp/jaeger:
       endpoint: jaeger.tools.svc.cluster.local:4317
       tls:
         insecure: true
+    prometheus:
+      endpoint: "0.0.0.0:8889"
+      send_timestamps: true
+      resource_to_telemetry_conversion:
+        enabled: true
+    # prometheusremotewrite:
+    #   endpoint: http://kube-prometheus-prometheus.prometheus-system:9090/api/v1/write
+    #   compression: "gzip"
+    #   tls:
+    #     insecure: true
+  connectors:
+    spanmetrics:
+      namespace: span.metrics
+      histogram:
+        explicit:
+          buckets: [ 100us, 1ms, 2ms, 6ms, 10ms, 100ms, 250ms ]
+      # metrics_flush_interval: 15s
+      exemplars:
+        enabled: true
+      # dimensions:
+      # - name: stack
+      # - name: http.status_code
+      # - name: http.method
+      # - name: http.method
+      #   default: GET
+      # - name: http.status_code
   service:
     pipelines:
       traces:
+        # processors: [ probabilistic_sampler, attributes/formance, resource/formance, batch ]
         exporters:
         - otlp/jaeger
+        - spanmetrics
+      metrics:
+        receivers:
+        - otlp
+        - spanmetrics
+        # processors:
+        # - attributes/formance
+        # - batch
+        exporters:
+        - debug
+        # - prometheusremotewrite
+        - prometheus
 
   processors:
     memory_limiter:
       check_interval: 1s
       limit_mib: 1000
       spike_limit_mib: 200
-
-mode: deployment
+    probabilistic_sampler:
+      sampling_percentage: 95
+    batch:
+      send_batch_size: 1000
+      timeout: 10s
+    resource/formance:
+      attributes:
+      - key: deployment.environment
+        value: dev
+        action: upsert
+    attributes/formance:
+      actions:
+      - key: formance_cluster
+        action: upsert
+        value: dev
+      - key: formance_env
+        action: upsert
+        value: dev
+      - key: deployment_environment
+        action: delete
+      - key: deployment_region
+        action: delete
