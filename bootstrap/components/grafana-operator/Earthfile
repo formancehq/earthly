@@ -4,11 +4,14 @@ IMPORT ../../.. AS core
 
 deploy:
     FROM --pass-args core+deployer-image
-    COPY values.yaml .
-    RUN helm upgrade --install \
+    COPY *.yaml .
+    COPY --dir datasources .
+    RUN --no-cache helm upgrade --install \
         --namespace grafana-system \
         --create-namespace \
         --values values.yaml \
         --version v5.17.0 \
         grafana-operator  oci://ghcr.io/grafana/helm-charts/grafana-operator
+    RUN kubectl apply -f grafana.yaml
+    RUN kubectl apply -k ./datasources
         
