@@ -42,19 +42,22 @@ spec:
             #  value: "1"
             - name: BUILDKIT_DEBUG
               value: "true"
-            
           ports:
             - name: buildkit
               containerPort: 8372
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- with .Values.persistentVolumeClaimName }}
           volumeMounts:
+            {{- with .Values.persistentVolumeClaimName }}
             - name: earthly-cache
               mountPath: /tmp/earthly
               readOnly: false
-          {{- end }}
+            {{- end }}
+            - name: buildkitd-config
+              mountPath: /etc/buildkitd.toml.template
+              subPath: buildkitd.toml.template
+
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -67,9 +70,15 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.persistentVolumeClaimName }}
       volumes:
+        {{- with .Values.persistentVolumeClaimName }}
         - name: earthly-cache
           persistentVolumeClaim:
             claimName: {{ . }}
-      {{- end }}
+        {{- end }}
+        - name: buildkitd-config
+          configMap:
+            name: buildkitd-config
+            items:
+              - key: buildkitd.toml.template
+                path: buildkitd.toml.template
