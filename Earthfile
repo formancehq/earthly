@@ -55,13 +55,16 @@ builder-image:
     COPY (+sources-goreleaser/*) /usr/bin/goreleaser
     COPY (+sources-syft/*) /usr/bin/syft
 
-# deployer-image Deployer image on main cluster
-deployer-image:
+k8s-base:
     FROM +base-image
     RUN apk update && \
         apk add --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community kubectl && \
         apk add --repository=http://dl-cdn.alpinelinux.org/alpine/edge/community kustomize && \
         apk add helm git jq
+
+# deployer-image Deployer image on main cluster
+deployer-image:
+    FROM +k8s-image
     RUN --secret KUBE_APISERVER kubectl config set clusters.default.server ${KUBE_APISERVER}
     RUN kubectl config set clusters.default.insecure-skip-tls-verify true
     RUN --secret KUBE_TOKEN kubectl config set-credentials default --token=${KUBE_TOKEN}
@@ -70,46 +73,79 @@ deployer-image:
 
 # vcluster-deployer-image Deploy in a vcluster
 vcluster-deployer-image:
-    FROM +deployer-image
-    COPY --dir ./vcluster/charts/tld-certificates .
-    COPY --dir ./vcluster/charts/vcluster-ingress .
-    ARG --required user
-    RUN --secret tld helm upgrade --install vcluster-$user-ingress ./vcluster-ingress \
+    FROM +base-image
+    ARG FORMANCE_DEV_CLUSTER_V2=no
+    IF [ "$FORMANCE_DEV_CLUSTER_V2" == "yes" ]
+        FROM +k8s-base
+        ARG --required FORMANCE_DEV_CLUSTER_V2_ADDRESS=
+        RUN kubectl config set clusters.default.server $FORMANCE_DEV_CLUSTER_V2_ADDRESS
+        RUN kubectl config set-credentials default --token=unused
+        RUN kubectl config set-context default --cluster=default --user=default
+        RUN kubectl config use-context default
+
+        RUN helm upgrade -n formance postgres oci://registry-1.docker.io/bitnamicharts/postgresql \
+            --install \
+            --version 16.7.13 \
+            --create-namespace \
+            --set architecture=standalone \
+            --set auth.username=formance \
+            --set auth.postgresPassword=formance \
+            --set auth.password=formance \
+            --set auth.database=formance
+
+        RUN helm upgrade --install \
+            --version 1.1.7 \
+            nats nats \
+            --repo https://nats-io.github.io/k8s/helm/charts/ \
+            --namespace default \
+            --set config.jetstream.enabled=true \
+            --set config.jetstream.fileStorage.enabled=false \
+            --set service.enabled=true \
+            --set service.ports.nats.enabled=true
+
+        RUN helm upgrade --install reflector oci://ghcr.io/emberstack/helm-charts/reflector
+    ELSE
+        FROM +deployer-image
+        COPY --dir ./vcluster/charts/tld-certificates .
+        COPY --dir ./vcluster/charts/vcluster-ingress .
+        ARG --required user
+        RUN --secret tld helm upgrade --install vcluster-$user-ingress ./vcluster-ingress \
+            --namespace vcluster-$user \
+            --create-namespace \
+            --set tld=$tld \
+            --set user=$user
+        COPY ./vcluster/values.yaml .
+        RUN helm package ./tld-certificates
+        ENV tldCertificatesChartBundled=$(cat tld-certificates-0.6.1.tgz | base64 -w 0)
+
+        RUN echo "user: $user" > /tmp/values.yaml
+        RUN --secret tld echo "tld: $tld" >> /tmp/values.yaml
+
+        LET values=$(cat /tmp/values.yaml)
+        RUN --secret tld helm upgrade --install $user vcluster \
+            --repo https://charts.loft.sh \
+            --version v0.19.9 \
+            --create-namespace \
         --namespace vcluster-$user \
-        --create-namespace \
-        --set tld=$tld \
-        --set user=$user
-    COPY ./vcluster/values.yaml .
-    RUN helm package ./tld-certificates
-    ENV tldCertificatesChartBundled=$(cat tld-certificates-0.6.1.tgz | base64 -w 0)
+            --set syncer.extraArgs[0]="--tls-san=kube.$user.$tld" \
+            --set syncer.extraArgs[1]="--out-kube-config-server=https://kube.$user.$tld" \
+            --set syncer.extraArgs[2]="--out-kube-config-secret=vc-$user" \
+            --set init.helm[0].bundle=$tldCertificatesChartBundled \
+            --set init.helm[0].chart.name=tld-certificates \
+            --set init.helm[0].chart.version=0.6.1 \
+            --set init.helm[0].values="$values" \
+            --set init.helm[0].release.name=tld-certificates \
+            --set init.helm[0].release.namespace=formance \
+            --values values.yaml \
+            --repository-config=''
+        RUN kubectl -n vcluster-$user get secrets/vc-$user || kubectl -n vcluster-$user create secret generic vc-$user
+        RUN while [ "$(kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}')" == "" ]; do sleep 1s; done
+        RUN kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}' | base64 -d > /root/.kube/vcluster-config
+        ENV KUBECONFIG=/root/.kube/vcluster-config
+        RUN chmod 0700 /root/.kube/vcluster-config
 
-    RUN echo "user: $user" > /tmp/values.yaml
-    RUN --secret tld echo "tld: $tld" >> /tmp/values.yaml
-
-    LET values=$(cat /tmp/values.yaml)
-    RUN --secret tld helm upgrade --install $user vcluster \
-        --repo https://charts.loft.sh \
-        --version v0.19.7 \
-        --create-namespace \
-        --namespace vcluster-$user \
-        --set syncer.extraArgs[0]="--tls-san=kube.$user.$tld" \
-        --set syncer.extraArgs[1]="--out-kube-config-server=https://kube.$user.$tld" \
-        --set syncer.extraArgs[2]="--out-kube-config-secret=vc-$user" \
-        --set init.helm[0].bundle=$tldCertificatesChartBundled \
-        --set init.helm[0].chart.name=tld-certificates \
-        --set init.helm[0].chart.version=0.6.1 \
-        --set init.helm[0].values="$values" \
-        --set init.helm[0].release.name=tld-certificates \
-        --set init.helm[0].release.namespace=formance \
-        --values values.yaml \
-        --repository-config=''
-    RUN kubectl -n vcluster-$user get secrets/vc-$user || kubectl -n vcluster-$user create secret generic vc-$user
-    RUN while [ "$(kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}')" == "" ]; do sleep 1s; done
-    RUN kubectl -n vcluster-$user get secrets/vc-$user -o jsonpath='{.data.config}' | base64 -d > /root/.kube/vcluster-config
-    ENV KUBECONFIG=/root/.kube/vcluster-config
-    RUN chmod 0700 /root/.kube/vcluster-config
-
-    SAVE IMAGE vcluster-$user
+        SAVE IMAGE vcluster-$user
+    END
 
 # final-image Final image
 final-image:
