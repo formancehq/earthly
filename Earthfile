@@ -64,7 +64,7 @@ k8s-base:
 
 # deployer-image Deployer image on main cluster
 deployer-image:
-    FROM +k8s-image
+    FROM +k8s-base
     RUN --secret KUBE_APISERVER kubectl config set clusters.default.server ${KUBE_APISERVER}
     RUN kubectl config set clusters.default.insecure-skip-tls-verify true
     RUN --secret KUBE_TOKEN kubectl config set-credentials default --token=${KUBE_TOKEN}
