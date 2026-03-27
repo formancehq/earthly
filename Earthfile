@@ -32,7 +32,7 @@ sources-syft:
 sources-speakeasy:
     FROM +base-image
     RUN apk update && apk add yarn jq unzip curl
-    ARG VERSION=v1.351.0
+    ARG VERSION=v1.665.0
     ARG TARGETARCH
     RUN echo $VERSION
     RUN curl -fsSL https://github.com/speakeasy-api/speakeasy/releases/download/${VERSION}/speakeasy_linux_$TARGETARCH.zip -o /tmp/speakeasy_linux_$TARGETARCH.zip
