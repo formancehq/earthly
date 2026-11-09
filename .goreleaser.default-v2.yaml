@@ -1,7 +1,11 @@
 version: 2
 
 nightly:
-  version_template: '{{ .FullCommit }}'
+  # RFC-0013: CI passes a SemVer development version (formancehq/ci/actions/dev-version)
+  # as DEV_VERSION, e.g. 2.7.2-dev.3.ga1c2c45. Without it, nightly builds keep the SHA,
+  # and every tag below renders exactly as before.
+  version_template: >-
+    {{ if index .Env "DEV_VERSION" }}{{ .Env.DEV_VERSION }}{{ else }}{{ .FullCommit }}{{ end }}
   publish_release: false
 
 checksum:
@@ -38,8 +42,10 @@ dockers_v2:
     dockerfile: build.Dockerfile
     images: ["ghcr.io/formancehq/{{ .ProjectName }}"]
     tags:
-      - '{{ if not .IsNightly }}v{{ end }}{{ .Version }}'
+      - '{{ if or (not .IsNightly) (index .Env "DEV_VERSION") }}v{{ end }}{{ .Version }}'
       - '{{ if not .IsNightly }}{{if not .Prerelease }}latest{{ end }}{{ end }}'
+      # RFC-0013: keep the full-SHA tag as a compatibility alias of SemVer nightlies.
+      - '{{ if and .IsNightly (index .Env "DEV_VERSION") }}{{ .FullCommit }}{{ end }}'
     platforms: [linux/amd64, linux/arm64/v8]
     flags: [--provenance=false]
     sbom: false
@@ -56,7 +62,8 @@ dockers_v2:
     dockerfile: scratch.Dockerfile
     images: ["ghcr.io/formancehq/{{ .ProjectName }}"]
     tags:
-      - '{{ if not .IsNightly }}v{{ end }}{{ .Version }}-scratch'
+      - '{{ if or (not .IsNightly) (index .Env "DEV_VERSION") }}v{{ end }}{{ .Version }}-scratch'
+      - '{{ if and .IsNightly (index .Env "DEV_VERSION") }}{{ .FullCommit }}-scratch{{ end }}'
     platforms: [linux/amd64, linux/arm64/v8]
     flags: [--provenance=false]
     sbom: false
@@ -65,7 +72,7 @@ dockers_v2:
     dockerfile: build.Dockerfile
     images: ["ghcr.io/formancehq/{{ .ProjectName }}"]
     tags:
-      - '{{ if not .IsNightly }}v{{ end }}{{ .Version }}-amd64'
+      - '{{ if or (not .IsNightly) (index .Env "DEV_VERSION") }}v{{ end }}{{ .Version }}-amd64'
     platforms: [linux/amd64]
     flags: [--provenance=false]
     sbom: false
@@ -74,7 +81,7 @@ dockers_v2:
     dockerfile: scratch.Dockerfile
     images: ["ghcr.io/formancehq/{{ .ProjectName }}"]
     tags:
-      - '{{ if not .IsNightly }}v{{ end }}{{ .Version }}-amd64-scratch'
+      - '{{ if or (not .IsNightly) (index .Env "DEV_VERSION") }}v{{ end }}{{ .Version }}-amd64-scratch'
     platforms: [linux/amd64]
     flags: [--provenance=false]
     sbom: false
@@ -83,7 +90,7 @@ dockers_v2:
     dockerfile: build.Dockerfile
     images: ["ghcr.io/formancehq/{{ .ProjectName }}"]
     tags:
-      - '{{ if not .IsNightly }}v{{ end }}{{ .Version }}-arm64'
+      - '{{ if or (not .IsNightly) (index .Env "DEV_VERSION") }}v{{ end }}{{ .Version }}-arm64'
     platforms: [linux/arm64/v8]
     flags: [--provenance=false]
     sbom: false
@@ -92,7 +99,7 @@ dockers_v2:
     dockerfile: scratch.Dockerfile
     images: ["ghcr.io/formancehq/{{ .ProjectName }}"]
     tags:
-      - '{{ if not .IsNightly }}v{{ end }}{{ .Version }}-arm64-scratch'
+      - '{{ if or (not .IsNightly) (index .Env "DEV_VERSION") }}v{{ end }}{{ .Version }}-arm64-scratch'
     platforms: [linux/arm64/v8]
     flags: [--provenance=false]
     sbom: false
